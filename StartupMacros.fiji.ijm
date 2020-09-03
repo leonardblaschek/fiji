@@ -559,7 +559,7 @@ macro "pheno [q]" {
              //         run("Analyze Skeleton (2D/3D)", "prune=none calculate");
              saveAs("jpg", dir2+duplicate+"_skeleton");
              // selectWindow(duplicate+"_skeleton.jpg");
-	 selectWindow(duplicate);
+   selectWindow(duplicate);
              close();
              //         selectWindow(duplicate);
              //         close();
@@ -757,30 +757,75 @@ macro "save all" {
 }
 
 macro "rotate to 0 [n7]" {
-    run("Set Scale...", "distance=5.9 known=1 pixel=1 unit=µm");
+//     run("Set Scale...", "distance=5.9 known=1 pixel=1 unit=µm");
     run("Set Measurements...", "area centroid center perimeter bounding fit shape feret's redirect=None decimal=3");
     run("Measure");
     offset_angle = getResult("Angle");
-    roiManager("Select", 0);
-    run("Rotate...", "rotate angle=offset_angle");
-    roiManager("Add");
-    roiManager("Select", 0);
-    roiManager("Delete");
+//     roiManager("Select", 0);
+//     run("Rotate...", "rotate angle=offset_angle");
+//     roiManager("Add");
+//     roiManager("Select", 0);
+//     roiManager("Delete");
     run("Select All");
-    run("Rotate... ", "angle=offset_angle grid=1 interpolation=Bilinear enlarge stack");
+    run("Rotate... ", "angle=offset_angle grid=1 interpolation=Bilinear enlarge");
     run("Clear Results");
     close("Results");
     roiManager("Show All with labels");
 }
 
-macro "Measure poplar IRX [n8]" {
-    run("Set Scale...", "distance=5.9 known=1 pixel=1 unit=µm");
-    run("Set Measurements...", "mean centroid area perimeter bounding fit shape feret's redirect=None decimal=3");
-    roiManager("Remove Slice Info");
-    roiManager("Measure");
-    a=getTitle();
-    saveAs("tiff", "/home/leonard/Documents/Uni/PhD/IRX/Poplar/rotated_heatmaps/"+a+"_rotated_heatmap.tiff");
-    roiManager("Save", "/home/leonard/Documents/Uni/PhD/IRX/Poplar/rois/"+a+"_rotated_roi.zip");
+macro "List XY Coordinates [n8]" {
+    //run("Set Measurements...", "area perimeter bounding fit shape feret's redirect=None decimal=3");
+    firstTE = getNumber("Enter number of the first measured TE", 1) - 1
+    missingTE = getNumber("Enter number of any missing measurements", 999)
+    a = getTitle();
+    saveAs("tiff", "/home/leonard/Documents/Uni/PhD/IRX/Poplar/2020-08_soil_poplar/rotated_images/"+a+"_rotated.tiff");
+    roiManager("Save", "/home/leonard/Documents/Uni/PhD/IRX/Poplar/2020-08_soil_poplar/rois/"+a+"_roi.zip");
+    for (m = 0; m < roiManager("count"); m++){
+        if (m == missingTE) { // skip the missing TE in the numbering
+          firstTE = firstTE + 1
+        }
+        roiManager("Select", m);
+        area = getValue("Area");
+        X = getValue("X");
+        Y = getValue("Y");
+        perim = getValue("Perim.");
+        width = getValue("Width");
+        height = getValue("Height");
+        major = getValue("Major");
+        minor = getValue("Minor");
+        angle = getValue("Angle");
+        circ = getValue("Circ.");
+        roundness = getValue("Round");
+        solidity = getValue("Solidity");
+        length = getValue("Length");
+        getSelectionCoordinates(x, y);
+        for (i=0; i<x.length; i++){
+          nrow = nResults;
+          setResult("Area", nrow, area);
+          setResult("X", nrow, X);
+          setResult("Y", nrow, Y);
+          setResult("Perim.", nrow, perim);
+          setResult("Width", nrow, width);
+          setResult("Height", nrow, height);
+          setResult("Major", nrow, major);
+          setResult("Minor", nrow, minor);
+          setResult("Angle", nrow, angle);
+          setResult("Circ.", nrow, circ);
+          setResult("Round", nrow, roundness);
+          setResult("Solidity", nrow, solidity);
+          setResult("Length", nrow, length);
+          setResult("image", nrow, a);
+          if (m == 0) { // the first ROI is always 0 to identify the cambium reference line
+            setResult("ROI", nrow, m);
+          } else {
+            setResult("ROI", nrow, m + firstTE);
+          }
+          setResult("point", nrow, i);
+          setResult("x", nrow, x[i]);
+          setResult("y", nrow, y[i]);
+          updateResults();
+        }
+    }
 }
 
 macro "Measure outline pixel value [n9]" {
@@ -793,30 +838,30 @@ macro "Measure outline pixel value [n9]" {
     n = roiManager("count");
     roiManager("Show All");
     for ( i=0; i<n; i++ ) { 
-	roiManager("select", i);
-	outline2results(str+(i+1));
+  roiManager("select", i);
+  outline2results(str+(i+1));
     }
     //roiManager("Measure");
     //saveAs("tiff", "/home/leonard/Documents/Uni/PhD/IRX/Poplar/rotated_heatmaps/"+a+"_rotated_heatmap.tiff");
     //roiManager("Save", "/home/leonard/Documents/Uni/PhD/IRX/Poplar/rois/"+a+"_rotated_roi.zip");
     //
     function outline2results(lbl) {
-	Roi.getCoordinates(x, y);
-	n = x.length;
-	sum = 0;
-	for (i=0; i<n; i++) sum += getValue(x[i], y[i]);
-	setResult("Mean", nResults, sum/n );
+  Roi.getCoordinates(x, y);
+  n = x.length;
+  sum = 0;
+  for (i=0; i<n; i++) sum += getValue(x[i], y[i]);
+  setResult("Mean", nResults, sum/n );
     }
 }
 
-macro "Measure concavity [n5]" {
+macro "Measure concavity" {
     run("Set Scale...", "distance=5.9 known=1 pixel=1 unit=µm");
     run("Set Measurements...", "area perimeter redirect=None decimal=3");
     n = roiManager("count");
     for ( i=1; i<n; i++ ) { 
-	roiManager("select", i);
-	run("Convex Hull");
-	roiManager("Add");
+  roiManager("select", i);
+  run("Convex Hull");
+  roiManager("Add");
     }
     roiManager("Select", newArray(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15));
     roiManager("Delete");
@@ -831,41 +876,21 @@ macro "Measure concavity At" {
     list = getFileList(dir1); 
     for (i=0; i<list.length; i++) {
 
-	if(endsWith(list[i],"rotated_roi.zip")){
+  if(endsWith(list[i],"rotated_roi.zip")){
                 path = dir1+list[i]; 
-	    roiManager("Open", path);
-	    roiManager("Select", 1);
-	    run("Convex Hull");
-	    roiManager("Add");
-	    roiManager("Select", newArray(0,1));
-	    roiManager("Delete");
-	    roiManager("Select", 0);
-	    getStatistics(area);
-	    setResult("File", nResults, list[i]);
-	    setResult("ConvexArea", nResults-1, area);
-	    roiManager("Select", 0);
-	    roiManager("Delete");
-	}
-    }
-}
-
-macro "List XY Coordinates" {
-    run("Set Scale...", "distance=5.9 known=1 pixel=1 unit=µm");
-    run("Set Measurements...", "centroid area perimeter bounding fit shape feret's redirect=None decimal=3");
-    roiManager("Select", 0);
-    roiManager("Add");
-    roiManager("Select", 0);
-    roiManager("Delete");
-    a=getTitle();
-    roiManager("Save", "/home/leonard/Documents/Uni/PhD/IRX/RAMAN/rois/"+a+"rotated_roi.zip");
-    for (m = 0; m < roiManager("count"); m++){
-        roiManager("Select", m);
-        run("Measure");
-        getSelectionCoordinates(x, y);
-        for (i=0; i<x.length; i++){
-            setResult("ROIx"+i, m, x[i]);
-            setResult("ROIy"+i, m, y[i]);
-        }
+      roiManager("Open", path);
+      roiManager("Select", 1);
+      run("Convex Hull");
+      roiManager("Add");
+      roiManager("Select", newArray(0,1));
+      roiManager("Delete");
+      roiManager("Select", 0);
+      getStatistics(area);
+      setResult("File", nResults, list[i]);
+      setResult("ConvexArea", nResults-1, area);
+      roiManager("Select", 0);
+      roiManager("Delete");
+  }
     }
 }
 
@@ -892,12 +917,12 @@ macro "get line profile [n4]" {
         profile = 0;
         profile = getProfile();
         for (i = 0; i < profile.length; i++){
-	        setResult("Roi_"+m, i, profile[i]);
+          setResult("Roi_"+m, i, profile[i]);
         }
   }
 }
 
-macro "warped heatmap [n3]" {
+macro "warped heatmap" {
     a=getTitle();
     b=getDirectory("image");
     run("Images to Stack", "name=Stack title=[] use");
@@ -940,4 +965,124 @@ macro "warped heatmap [n3]" {
     rename(a);
     roiManager("Show All with labels")
     //run("Close All");
+}
+
+macro "IF_area [n3]" {
+  a = getTitle();
+  getCursorLoc(x, y, z, modifiers);
+  makeOval(x-40, y-40, 80, 80);
+  roiManager("Add");
+  makeOval(x-20, y-20, 40, 40);
+  roiManager("Add");
+  makeOval(x-10, y-10, 20, 20);
+  roiManager("Add");
+  roiManager("Show All with labels");
+  waitForUser("Measuring overlap", "Add ROIs for the lumen area.");
+  roiManager("Save", "/home/leonard/Documents/Uni/PhD/Raman/IF_areas/"+a+".zip");
+  for (m = 3; m < roiManager("count"); m++){
+    roiManager("Select", newArray(0,m));
+    roiManager("AND");
+    sel = selectionType();
+    if (sel == -1){
+      setResult("Area_80", m-3, "0");
+    }
+    else {
+      getStatistics(area);
+      setResult("Area_80", m-3, area);
+    }
+  }
+  for (m = 3; m < roiManager("count"); m++){
+    roiManager("Select", newArray(1,m));
+    roiManager("AND");
+    sel = selectionType();
+    if (sel == -1){
+      setResult("Area_40", m-3, "0");
+    }
+    else {
+      getStatistics(area);
+      setResult("Area_40", m-3, area);
+    }
+  }
+  for (m = 3; m < roiManager("count"); m++){
+    roiManager("Select", newArray(2,m));
+    roiManager("AND");
+    sel = selectionType();
+    if (sel == -1){
+      setResult("Area_20", m-3, "0");
+    }
+    else {
+      getStatistics(area);
+      setResult("Area_20", m-3, area);
+    }
+  }
+}
+  
+macro "OD_hue_activity [n5]" {
+    rename("Aligned_OD");
+    run("Duplicate...", "duplicate");
+    rename("Aligned_hue");
+    //selectWindow("Stack");
+    //close();
+    selectWindow("Aligned_OD");
+    run("8-bit");
+    run("Calibrate...", "function=[Uncalibrated OD] unit=[Gray Value] text1= text2=");
+    run("Set Measurements...", "mean nan redirect=None decimal=3");
+    roiManager("multi-measure measure_all");
+    //selectWindow("Aligned_OD");
+    //close();
+    selectWindow("Aligned_hue");
+    run("HSB Stack");
+    selectWindow("Aligned_hue");
+    run("Reduce Dimensionality...", "slices");
+    selectWindow("Aligned_hue");
+    run("Set Measurements...", "median nan redirect=None decimal=3");
+    roiManager("multi-measure measure_all append");
+    //selectWindow("Aligned_hue");
+    //close();
+    run("Close All");
+}
+
+macro "add_raman_crosshairs" {
+//visualise the center of the individual images in the stitched mosaic
+dir = getDirectory("Select directory containing raw .tif images");
+outDir = getDirectory("Select output directory");
+path = File.openDialog("Select stitched image")
+
+list = getFileList(dir); 
+for (i=0; i<list.length; i++) {
+  open(dir+list[i]);
+  run("Select All");
+  setBackgroundColor(0, 0, 0);
+  run("Clear", "slice");
+  img = getTitle();
+  getDimensions(width, height, channels, slices, frames);
+  x1 = (width / 2) - 10;
+  x2 = (width / 2) - 25;
+  x3 = (width / 2) + 10;
+  x4 = (width / 2) + 25;
+  y1 = (height / 2) - 10;
+  y2 = (height / 2) - 25;
+  y3 = (height / 2) + 10;
+  y4 = (height / 2) + 25;
+  setColor("#e8c245");
+  setLineWidth(7);
+  drawLine(x1, height / 2, x2, height / 2);
+  drawLine(x3, height / 2, x4, height / 2);
+  drawLine(width / 2, y1, width / 2, y2);
+  drawLine(width / 2, y3, width / 2, y4);
+  
+  setFont("Monospaced", 20);
+  drawString(img, x4, y1);
+  
+  saveAs("tiff",outDir+img);
+  close();
+}
+
+run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory="+outDir+" layout_file=TileConfiguration.registered.txt fusion_method=[Max. Intensity] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 computation_parameters=[Save memory (but be slower)] image_output=[Fuse and display]");
+run("RGB Color");
+rename("Overlay");
+open(path);
+run("Add Image...", "image=Overlay x=0 y=0 opacity=100 zero");
+saveAs("tiff",outDir+"stitched_overlay.tiff");
+close("*")
 }
