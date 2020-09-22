@@ -284,7 +284,7 @@ macro "OD_hue_part1 [n0]" {
     rename("Aligned_OD");
     roiManager("Show All with labels")
 }
-macro "OD_hue_part2 [n1]" {
+macro "OD_hue_part2" {
     run("Set Measurements...", "centroid mean redirect=None decimal=3");
     run("Set Scale...", "distance=5.9 known=1 pixel=1 unit=µm");
     run("Select None");
@@ -775,14 +775,14 @@ macro "rotate to 0 [n7]" {
 
 macro "List XY Coordinates [n8]" {
     //run("Set Measurements...", "area perimeter bounding fit shape feret's redirect=None decimal=3");
-    firstTE = getNumber("Enter number of the first measured TE", 1) - 1
-    missingTE = getNumber("Enter number of any missing measurements", 999)
+    firstTE = getNumber("Enter number of the first measured TE", 1) - 1;
+    missingTE = getNumber("Enter number of any missing measurements", 999) - firstTE;
     a = getTitle();
-    saveAs("tiff", "/home/leonard/Documents/Uni/PhD/IRX/Poplar/2020-08_soil_poplar/rotated_images/"+a+"_rotated.tiff");
-    roiManager("Save", "/home/leonard/Documents/Uni/PhD/IRX/Poplar/2020-08_soil_poplar/rois/"+a+"_roi.zip");
+//     saveAs("tiff", "/home/leonard/Documents/Uni/PhD/IRX/Poplar/2020-08_soil_poplar/rotated_images/"+a+"_rotated.tiff");
+//     roiManager("Save", "/home/leonard/Documents/Uni/PhD/IRX/Poplar/2020-08_soil_poplar/rois/"+a+"_roi.zip");
     for (m = 0; m < roiManager("count"); m++){
         if (m == missingTE) { // skip the missing TE in the numbering
-          firstTE = firstTE + 1
+          firstTE = firstTE + 1;
         }
         roiManager("Select", m);
         area = getValue("Area");
@@ -1017,29 +1017,77 @@ macro "IF_area [n3]" {
   }
 }
   
+// macro "OD_hue_activity [n5]" {
+//     rename("Aligned_OD");
+//     run("Duplicate...", "duplicate");
+//     rename("Aligned_hue");
+//     //selectWindow("Stack");
+//     //close();
+//     selectWindow("Aligned_OD");
+//     run("8-bit");
+//     run("Calibrate...", "function=[Uncalibrated OD] unit=[Gray Value] text1= text2=");
+//     run("Set Measurements...", "mean nan redirect=None decimal=3");
+//     roiManager("multi-measure measure_all");
+//     //selectWindow("Aligned_OD");
+//     //close();
+//     selectWindow("Aligned_hue");
+//     run("HSB Stack");
+//     selectWindow("Aligned_hue");
+//     run("Reduce Dimensionality...", "slices");
+//     selectWindow("Aligned_hue");
+//     run("Set Measurements...", "median nan redirect=None decimal=3");
+//     roiManager("multi-measure measure_all append");
+//     //selectWindow("Aligned_hue");
+//     //close();
+//     run("Close All");
+// }
+
 macro "OD_hue_activity [n5]" {
+  if (roiManager("count") != 140) Dialog.create("Unexpected number of ROIs!");
+  else {
+    setBatchMode(true);
+    roiManager("Deselect");
+    roiManager("Remove Channel Info");
+    roiManager("Remove Slice Info");
+    roiManager("Remove Frame Info");
     rename("Aligned_OD");
     run("Duplicate...", "duplicate");
     rename("Aligned_hue");
-    //selectWindow("Stack");
-    //close();
     selectWindow("Aligned_OD");
     run("8-bit");
     run("Calibrate...", "function=[Uncalibrated OD] unit=[Gray Value] text1= text2=");
-    run("Set Measurements...", "mean nan redirect=None decimal=3");
-    roiManager("multi-measure measure_all");
-    //selectWindow("Aligned_OD");
-    //close();
+    for (n = 1; n <= nSlices; n++) {
+      setSlice(n);
+      for (m = 0; m < 140; m++){
+        roiManager("Select", m);
+        mean = getValue("Mean");
+        setResult("slice", m + ((n - 1) * 140), n);
+        if (m < 20) setResult("cell_type", m + ((n - 1) * 140), "IF");
+        else if (m < 40) setResult("cell_type", m + ((n - 1) * 140), "LP");
+        else if (m < 60) setResult("cell_type", m + ((n - 1) * 140), "MX");
+        else if (m < 80) setResult("cell_type", m + ((n - 1) * 140), "PX");
+        else if (m < 100) setResult("cell_type", m + ((n - 1) * 140), "XF");
+        else if (m < 120) setResult("cell_type", m + ((n - 1) * 140), "PH");
+        else setResult("cell_type", m + ((n - 1) * 140), "BG");
+        setResult("mean_absorbance", m + ((n - 1) * 140), mean);
+      }
+    }
     selectWindow("Aligned_hue");
     run("HSB Stack");
     selectWindow("Aligned_hue");
     run("Reduce Dimensionality...", "slices");
     selectWindow("Aligned_hue");
-    run("Set Measurements...", "median nan redirect=None decimal=3");
-    roiManager("multi-measure measure_all append");
-    //selectWindow("Aligned_hue");
-    //close();
-    run("Close All");
+    for (n = 1; n <= nSlices; n++) {
+      setSlice(n);
+      for (m = 0; m < 140; m++){
+        roiManager("Select", m);
+        median = getValue("Median");
+        setResult("median_hue", m + ((n - 1) * 140), median);
+      }
+    }
+    close("*");
+    setBatchMode(false);
+  }
 }
 
 macro "add_raman_crosshairs" {
@@ -1085,4 +1133,102 @@ open(path);
 run("Add Image...", "image=Overlay x=0 y=0 opacity=100 zero");
 saveAs("tiff",outDir+"stitched_overlay.tiff");
 close("*")
+}
+
+macro "5cm_scale [n1]" {
+  len = getValue("Length")
+  run("Set Scale...", "distance="+len+" known=5 unit=cm");
+}
+
+macro "measure_drought [n2]" {
+  setBatchMode(true);
+  title = getTitle();
+  setForegroundColor(0, 0, 0);
+  run("Fill");
+  run("Select All");
+  run("Duplicate...", "title=Mask");
+  selectWindow("Mask");
+  run("Color Threshold...");
+  // Color Thresholder 2.1.0/1.53c
+  // Autogenerated macro, single images only!
+  min=newArray(3);
+  max=newArray(3);
+  filter=newArray(3);
+  a=getTitle();
+  call("ij.plugin.frame.ColorThresholder.RGBtoLab");
+  run("RGB Stack");
+  run("Convert Stack to Images");
+  selectWindow("Red");
+  rename("0");
+  selectWindow("Green");
+  rename("1");
+  selectWindow("Blue");
+  rename("2"); 
+  min[0]=50;
+  max[0]=255;
+  filter[0]="pass";
+  min[1]=0;
+  max[1]=130;
+  filter[1]="pass";
+  min[2]=140;
+  max[2]=255;
+  filter[2]="pass";
+  for (i=0;i<3;i++){
+    selectWindow(""+i);
+    setThreshold(min[i], max[i]);
+    run("Convert to Mask");
+    if (filter[i]=="stop")  run("Invert");
+  }
+  imageCalculator("AND create", "0","1");
+  imageCalculator("AND create", "Result of 0","2");
+  for (i=0;i<3;i++){
+    selectWindow(""+i);
+    close();
+  }
+  selectWindow("Result of 0");
+  close();
+  selectWindow("Result of Result of 0");
+  rename(a);
+  // Colour Thresholding-------------
+  setOption("BlackBackground", true);
+  run("Convert to Mask");
+  run("Remove Outliers...", "radius=25 threshold=50 which=Bright");
+  run("Create Selection");
+  saveAs("jpg", "/home/leonard/Documents/Uni/PhD/IRX/Drought/top/masks/"+title);
+  close();
+  selectWindow(title);
+  run("Restore Selection");
+  run("Set Measurements...", "area mean redirect=None decimal=3");
+  mean = getValue("Mean");
+  area = getValue("Area");
+  nrow = nResults
+  setResult("image", nrow, title);
+  setResult("area", nrow, area);
+  setResult("mean_hue", nrow, mean);
+  updateResults();
+  selectWindow("Threshold Color");
+  close();
+  close("*")
+  setBatchMode(false);
+}
+
+macro "save_cropped_rosettes" {
+  setBatchMode(true);
+  imgs = getDirectory("Select image directory");
+  masks = getDirectory("Select mask directory");
+  out = getDirectory("Select output directory");
+  list = getFileList(imgs); 
+  for (i=0; i<list.length; i++) {
+    open(masks+list[i]);
+    run("Convert to Mask");
+    run("Create Selection");
+    open(imgs+list[i]);
+    run("Restore Selection");
+    run("Crop");
+    setBackgroundColor(0, 0, 0);
+    run("Clear Outside");
+    saveAs("jpg", out+list[i]);
+    close("*");
+  }
+  setBatchMode(false);
 }
