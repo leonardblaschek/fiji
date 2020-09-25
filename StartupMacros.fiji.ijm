@@ -758,19 +758,23 @@ macro "save all" {
 
 macro "rotate to 0 [n7]" {
 //     run("Set Scale...", "distance=5.9 known=1 pixel=1 unit=µm");
-    run("Set Measurements...", "area centroid center perimeter bounding fit shape feret's redirect=None decimal=3");
-    run("Measure");
-    offset_angle = getResult("Angle");
+  a = getTitle();
+  run("Set Measurements...", "area centroid center perimeter bounding fit shape feret's redirect=None decimal=3");
+  run("Measure");
+  offset_angle = getResult("Angle");
 //     roiManager("Select", 0);
 //     run("Rotate...", "rotate angle=offset_angle");
 //     roiManager("Add");
 //     roiManager("Select", 0);
 //     roiManager("Delete");
-    run("Select All");
-    run("Rotate... ", "angle=offset_angle grid=1 interpolation=Bilinear enlarge");
-    run("Clear Results");
-    close("Results");
-    roiManager("Show All with labels");
+  run("Flatten");
+  close(a);
+  rename(a);
+  selectWindow(a);
+  run("Rotate... ", "angle=offset_angle grid=1 interpolation=Bilinear enlarge");
+  run("Clear Results");
+  close("Results");
+  roiManager("Show All with labels");
 }
 
 macro "List XY Coordinates [n8]" {
@@ -778,8 +782,8 @@ macro "List XY Coordinates [n8]" {
     firstTE = getNumber("Enter number of the first measured TE", 1) - 1;
     missingTE = getNumber("Enter number of any missing measurements", 999) - firstTE;
     a = getTitle();
-//     saveAs("tiff", "/home/leonard/Documents/Uni/PhD/IRX/Poplar/2020-08_soil_poplar/rotated_images/"+a+"_rotated.tiff");
-//     roiManager("Save", "/home/leonard/Documents/Uni/PhD/IRX/Poplar/2020-08_soil_poplar/rois/"+a+"_roi.zip");
+    saveAs("tiff", "/data/PhD/IRX/Poplar/2020-08_soil_poplar/rotated_images/"+a+"_rotated.tiff");
+    roiManager("Save", "/data/PhD/IRX/Poplar/2020-08_soil_poplar/rois/"+a+"_roi.zip");
     for (m = 0; m < roiManager("count"); m++){
         if (m == missingTE) { // skip the missing TE in the numbering
           firstTE = firstTE + 1;
@@ -1126,13 +1130,13 @@ for (i=0; i<list.length; i++) {
   close();
 }
 
-run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory="+outDir+" layout_file=TileConfiguration.registered.txt fusion_method=[Max. Intensity] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 computation_parameters=[Save memory (but be slower)] image_output=[Fuse and display]");
-run("RGB Color");
-rename("Overlay");
-open(path);
-run("Add Image...", "image=Overlay x=0 y=0 opacity=100 zero");
-saveAs("tiff",outDir+"stitched_overlay.tiff");
-close("*")
+  run("Grid/Collection stitching", "type=[Positions from file] order=[Defined by TileConfiguration] directory="+outDir+" layout_file=TileConfiguration.registered.txt fusion_method=[Max. Intensity] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 computation_parameters=[Save memory (but be slower)] image_output=[Fuse and display]");
+  run("RGB Color");
+  rename("Overlay");
+  open(path);
+  run("Add Image...", "image=Overlay x=0 y=0 opacity=100 zero");
+  saveAs("tiff",outDir+"stitched_overlay.tiff");
+  close("*")
 }
 
 macro "5cm_scale [n1]" {
