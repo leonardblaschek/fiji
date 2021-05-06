@@ -756,81 +756,84 @@ macro "save all" {
     } 
 }
 
+// "IRX measurements with pixel by pixel Wiesner absorbance"
 macro "rotate to 0 [n7]" {
-//     run("Set Scale...", "distance=5.9 known=1 pixel=1 unit=µm");
+  //     run("Set Scale...", "distance=5.9 known=1 pixel=1 unit=µm");
   a = getTitle();
   run("Set Measurements...", "area centroid center perimeter bounding fit shape feret's redirect=None decimal=3");
   run("Measure");
   offset_angle = getResult("Angle");
-//     roiManager("Select", 0);
-//     run("Rotate...", "rotate angle=offset_angle");
-//     roiManager("Add");
-//     roiManager("Select", 0);
-//     roiManager("Delete");
-  run("Flatten");
-  close(a);
-  rename(a);
-  selectWindow(a);
-  run("Rotate... ", "angle=offset_angle grid=1 interpolation=Bilinear enlarge");
+  //close(a);
+  //rename(a);
+  //selectWindow(a);
+  run("Rotate... ", "angle=offset_angle grid=1 interpolation=Bilinear enlarge stack");
   run("Clear Results");
   close("Results");
   roiManager("Show All with labels");
 }
 
 macro "List XY Coordinates [n8]" {
-    //run("Set Measurements...", "area perimeter bounding fit shape feret's redirect=None decimal=3");
-    firstTE = getNumber("Enter number of the first measured TE", 1) - 1;
-    missingTE = getNumber("Enter number of any missing measurements", 999) - firstTE;
-    a = getTitle();
-    saveAs("tiff", "/data/PhD/IRX/Poplar/2020-08_soil_poplar/rotated_images/"+a+"_rotated.tiff");
-    roiManager("Save", "/data/PhD/IRX/Poplar/2020-08_soil_poplar/rois/"+a+"_roi.zip");
-    for (m = 0; m < roiManager("count"); m++){
-        if (m == missingTE) { // skip the missing TE in the numbering
-          firstTE = firstTE + 1;
-        }
-        roiManager("Select", m);
-        area = getValue("Area");
-        X = getValue("X");
-        Y = getValue("Y");
-        perim = getValue("Perim.");
-        width = getValue("Width");
-        height = getValue("Height");
-        major = getValue("Major");
-        minor = getValue("Minor");
-        angle = getValue("Angle");
-        circ = getValue("Circ.");
-        roundness = getValue("Round");
-        solidity = getValue("Solidity");
-        length = getValue("Length");
-        getSelectionCoordinates(x, y);
-        for (i=0; i<x.length; i++){
-          nrow = nResults;
-          setResult("Area", nrow, area);
-          setResult("X", nrow, X);
-          setResult("Y", nrow, Y);
-          setResult("Perim.", nrow, perim);
-          setResult("Width", nrow, width);
-          setResult("Height", nrow, height);
-          setResult("Major", nrow, major);
-          setResult("Minor", nrow, minor);
-          setResult("Angle", nrow, angle);
-          setResult("Circ.", nrow, circ);
-          setResult("Round", nrow, roundness);
-          setResult("Solidity", nrow, solidity);
-          setResult("Length", nrow, length);
-          setResult("image", nrow, a);
-          if (m == 0) { // the first ROI is always 0 to identify the cambium reference line
-            setResult("ROI", nrow, m);
-          } else {
-            setResult("ROI", nrow, m + firstTE);
-          }
-          setResult("point", nrow, i);
-          setResult("x", nrow, x[i]);
-          setResult("y", nrow, y[i]);
-          updateResults();
-        }
+  //run("Set Measurements...", "area perimeter bounding fit shape feret's redirect=None decimal=3");
+  firstTE = getNumber("Enter number of the first measured TE", 1) - 1;
+  missingTE = getNumber("Enter number of any missing measurements", 999) - firstTE;
+  a = getTitle();
+  saveAs("tiff", "/data/PhD/IRX/Poplar/2020-08_soil_poplar/Wiesner/2020-10-22_poplar/registered/rotated_stacks/"+a+"_rotated.tiff");
+  roiManager("Save", "/data/PhD/IRX/Poplar/2020-08_soil_poplar/Wiesner/2020-10-22_poplar/registered/rois/"+a+"_roi.zip");
+  run("8-bit");
+  run("Calibrate...", "function=[Uncalibrated OD] unit=[Gray Value] text1= text2=");
+  run("Set Scale...", "distance=5.9 known=1 pixel=1 unit=µm");
+  for (m = 0; m < roiManager("count"); m++){
+    if (m == missingTE) { // skip the missing TE in the numbering
+      firstTE = firstTE + 1;
     }
+    roiManager("Select", m);
+    area = getValue("Area");
+    X = getValue("X");
+    Y = getValue("Y");
+    perim = getValue("Perim.");
+    width = getValue("Width");
+    height = getValue("Height");
+    major = getValue("Major");
+    minor = getValue("Minor");
+    angle = getValue("Angle");
+    circ = getValue("Circ.");
+    roundness = getValue("Round");
+    solidity = getValue("Solidity");
+    length = getValue("Length");
+    getSelectionCoordinates(x, y);
+    for (i=0; i<x.length; i++){
+      nrow = nResults;
+      setResult("Area", nrow, area);
+      setResult("X", nrow, X);
+      setResult("Y", nrow, Y);
+      setResult("Perim.", nrow, perim);
+      setResult("Width", nrow, width);
+      setResult("Height", nrow, height);
+      setResult("Major", nrow, major);
+      setResult("Minor", nrow, minor);
+      setResult("Angle", nrow, angle);
+      setResult("Circ.", nrow, circ);
+      setResult("Round", nrow, roundness);
+      setResult("Solidity", nrow, solidity);
+      setResult("Length", nrow, length);
+      setResult("image", nrow, a);
+      if (m == 0) { // the first ROI is always 0 to identify the cambium reference line
+        setResult("ROI", nrow, m);
+      } else {
+        setResult("ROI", nrow, m + firstTE);
+      }
+      setResult("point", nrow, i);
+      setResult("x", nrow, x[i]);
+      setResult("y", nrow, y[i]);
+      setSlice(1);
+      setResult("value_stained", nrow, getPixel(x[i], y[i]));
+      setSlice(2);
+      setResult("value_unstained", nrow, getPixel(x[i], y[i]));
+      updateResults();
+    }
+  }
 }
+
 
 macro "Measure outline pixel value [n9]" {
     run("Set Scale...", "distance=5.9 known=1 pixel=1 unit=µm");
@@ -898,14 +901,14 @@ macro "Measure concavity At" {
     }
 }
 
-macro "stich subfolders" {
+macro "stitch subfolders" {
     setBatchMode(true);
     dir1 = getDirectory("Choose Source Directory ");
     subFolderList = getFileList(dir1);
 
     for(i=0;i<subFolderList.length;i++){
         folder = dir1 + subFolderList[i];
-        run("Grid/Collection stitching", "type=[Unknown position] order=[All files in directory] directory=" + folder + " output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.30 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+        run("Grid/Collection stitching", "type=[Unknown position] order=[All files in directory] directory=" + folder + " output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.50 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
         run("RGB Color");
         saveAs("Tif", dir1 + subFolderList[i] + "stitched.jpg");
         run("Close All");
@@ -1047,8 +1050,11 @@ macro "IF_area [n3]" {
 // }
 
 macro "OD_hue_activity [n5]" {
-  if (roiManager("count") != 140) Dialog.create("Unexpected number of ROIs!");
+  dir = getDirectory("Select directory for saved ROIs");
+  a = getTitle();
+  if (roiManager("count") != 160) Dialog.create("Unexpected number of ROIs!");
   else {
+    roiManager("Save", dir+a+".zip");
     setBatchMode(true);
     roiManager("Deselect");
     roiManager("Remove Channel Info");
@@ -1062,18 +1068,20 @@ macro "OD_hue_activity [n5]" {
     run("Calibrate...", "function=[Uncalibrated OD] unit=[Gray Value] text1= text2=");
     for (n = 1; n <= nSlices; n++) {
       setSlice(n);
-      for (m = 0; m < 140; m++){
+      for (m = 0; m < 160; m++){
         roiManager("Select", m);
         mean = getValue("Mean");
-        setResult("slice", m + ((n - 1) * 140), n);
-        if (m < 20) setResult("cell_type", m + ((n - 1) * 140), "IF");
-        else if (m < 40) setResult("cell_type", m + ((n - 1) * 140), "LP");
-        else if (m < 60) setResult("cell_type", m + ((n - 1) * 140), "MX");
-        else if (m < 80) setResult("cell_type", m + ((n - 1) * 140), "PX");
-        else if (m < 100) setResult("cell_type", m + ((n - 1) * 140), "XF");
-        else if (m < 120) setResult("cell_type", m + ((n - 1) * 140), "PH");
-        else setResult("cell_type", m + ((n - 1) * 140), "BG");
-        setResult("mean_absorbance", m + ((n - 1) * 140), mean);
+        setResult("image", m + ((n - 1) * 160), a);
+        setResult("slice", m + ((n - 1) * 160), n);
+        if (m < 20) setResult("cell_type", m + ((n - 1) * 160), "IF");
+        else if (m < 40) setResult("cell_type", m + ((n - 1) * 160), "CML");
+        else if (m < 60) setResult("cell_type", m + ((n - 1) * 160), "LP");
+        else if (m < 80) setResult("cell_type", m + ((n - 1) * 160), "MX");
+        else if (m < 100) setResult("cell_type", m + ((n - 1) * 160), "PX");
+        else if (m < 120) setResult("cell_type", m + ((n - 1) * 160), "XF");
+        else if (m < 140) setResult("cell_type", m + ((n - 1) * 160), "PH");
+        else setResult("cell_type", m + ((n - 1) * 160), "BG");
+        setResult("mean_absorbance", m + ((n - 1) * 160), mean);
       }
     }
     selectWindow("Aligned_hue");
@@ -1083,10 +1091,10 @@ macro "OD_hue_activity [n5]" {
     selectWindow("Aligned_hue");
     for (n = 1; n <= nSlices; n++) {
       setSlice(n);
-      for (m = 0; m < 140; m++){
+      for (m = 0; m < 160; m++){
         roiManager("Select", m);
         median = getValue("Median");
-        setResult("median_hue", m + ((n - 1) * 140), median);
+        setResult("median_hue", m + ((n - 1) * 160), median);
       }
     }
     close("*");
@@ -1233,6 +1241,64 @@ macro "save_cropped_rosettes" {
     run("Clear Outside");
     saveAs("jpg", out+list[i]);
     close("*");
+  }
+  setBatchMode(false);
+}
+
+macro "align and save.czi" {
+  setBatchMode(true);
+  imgs = getDirectory("Select image directory");
+  list = getFileList(imgs); 
+  for (i=0; i<list.length; i++) {
+    run("Bio-Formats Importer", "open=" + imgs + list[i] + " color_mode=Default view=Hyperstack");
+    run("RGB Color", "frames");
+    run("Linear Stack Alignment with SIFT", "initial_gaussian_blur=1.60 steps_per_scale_octave=3 minimum_image_size=64 maximum_image_size=1024 feature_descriptor_size=4 feature_descriptor_orientation_bins=8 closest/next_closest_ratio=0.92 maximal_alignment_error=25 inlier_ratio=0.05 expected_transformation=Rigid interpolate");
+    selectWindow("Aligned 50 of 50");
+    saveAs("tiff", imgs+File.nameWithoutExtension+"_registered.tiff");
+    close("*");
+  }
+  setBatchMode(false);
+}
+
+macro "merge RGB stacks" {
+  setBatchMode(true);
+  imgs = getDirectory("Select image directory");
+  out = getDirectory("Select output directory");
+  list = getFileList(imgs); 
+  for (i=0; i<list.length; i++) {
+    open(imgs+list[i]);
+    run("RGB Color");
+    saveAs("jpg", out+list[i]+".jpg");
+    close("*");
+  }
+  setBatchMode(false);
+}
+
+macro "stitch Wiesner" {
+  setBatchMode(true);
+  dir1 = getDirectory("Choose Source Directory ");
+  dir2 = getDirectory("Choose Output Directory ");
+  subFolderList = getFileList(dir1);
+  
+  for(i=0;i<subFolderList.length;i++){
+    folder = dir1 + subFolderList[i];
+    folderList = getFileList(folder);
+    if (folderList.length == 80) {
+      rows = 10;
+      cols = 8;
+    } else if (folderList.length == 63) {
+      rows = 9;
+      cols = 7;
+    } else if (folderList.length == 99) {
+      rows = 11;
+      cols = 9;
+    }
+    run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + folder + "] file_names=[" + substring(folderList[i], 0, lengthOf(folderList[i]) - 8) + "_m{ii}.png] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.25 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+    run("RGB Color");
+    saveAs("PNG", dir2 + substring(subFolderList[i], 1, lengthOf(subFolderList[i]) - 17) + ".png");
+    run("Scale...", "x=0.25 y=0.25 width=5041 height=4958 interpolation=Bilinear average create title=021-04-29_Q_4_stained.png");
+    saveAs("Jpeg", dir2 + substring(subFolderList[i], 1, lengthOf(subFolderList[i]) - 17) + "_small.jpg");
+    run("Close All");
   }
   setBatchMode(false);
 }
