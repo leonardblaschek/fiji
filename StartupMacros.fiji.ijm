@@ -1292,6 +1292,9 @@ macro "stitch Wiesner" {
     } else if (folderList.length == 99) {
       rows = 11;
       cols = 9;
+    } else if (folderList.length == 48) {
+      rows = 8;
+      cols = 6;
     }
     run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + folder + "] file_names=[" + substring(folderList[i], 0, lengthOf(folderList[i]) - 8) + "_m{ii}.png] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.25 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
     run("RGB Color");
