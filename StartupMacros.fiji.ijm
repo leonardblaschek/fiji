@@ -915,10 +915,14 @@ macro "stitch subfolders" {
     }
 }
 
-macro "get line profile" {
+macro "get line profile [n4]" {
+  dir1=getDirectory("Select directory for output");
   run("Clear Results");
   a=getTitle();
-  roiManager("Save", "/home/leonard/Documents/Uni/Phloroglucinol/19-05_CML_measurements/rois/"+a+"_roi.zip");
+  roiManager("Save", dir1+a+"_roi.zip");
+  saveAs("tiff", dir1+a);
+  roiManager("Remove Slice Info");
+  setSlice(3);
   for (m = 0; m < roiManager("count"); m++){
         roiManager("Select", m);
         profile = 0;
@@ -927,30 +931,40 @@ macro "get line profile" {
           setResult("Roi_"+m, i, profile[i]);
         }
   }
+  run("Input/Output...", "jpeg=85 gif=-1 file=.csv use_file copy_row save_column");
+  saveAs("Results", dir1+a+".csv");
 }
 
-macro "warped heatmap" {
+macro "warped heatmap [n1]" {
     a=getTitle();
     b=getDirectory("image");
-    run("Images to Stack", "name=Stack title=[] use");
-    run("Linear Stack Alignment with SIFT", "initial_gaussian_blur=1.60 steps_per_scale_octave=3 minimum_image_size=64 maximum_image_size=1024 feature_descriptor_size=4 feature_descriptor_orientation_bins=8 closest/next_closest_ratio=0.92 maximal_alignment_error=25 inlier_ratio=0.05 expected_transformation=Rigid interpolate");
-    selectWindow("Stack");
-    close();
-    waitForUser("Cropping", "Select rectangular area of interest.");
-    run("Crop");
+//     run("Images to Stack", "name=Stack title=[] use");
+//     run("Linear Stack Alignment with SIFT", "initial_gaussian_blur=1.60 steps_per_scale_octave=3 minimum_image_size=64 maximum_image_size=1024 feature_descriptor_size=4 feature_descriptor_orientation_bins=8 closest/next_closest_ratio=0.92 maximal_alignment_error=25 inlier_ratio=0.05 expected_transformation=Rigid interpolate");
+//     selectWindow("Stack");
+//     close();
+//     waitForUser("Cropping", "Select rectangular area of interest.");
+//     run("Crop");
+//     setSlice(1);
+//     stained=getInfo("slice.label");
+//     setSlice(2);
+//     unstained=getInfo("slice.label");
+//     run("Stack to Images");
+//     selectWindow(unstained);
+//     rename("Aligned-0002");
+//     selectWindow(stained);
+//     rename("Aligned-0001");
+//     run("Extract SIFT Correspondences", "source_image=Aligned-0002 target_image=Aligned-0001 initial_gaussian_blur=1.40 steps_per_scale_octave=5 minimum_image_size=32 maximum_image_size=1024 feature_descriptor_size=8 feature_descriptor_orientation_bins=8 closest/next_closest_ratio=0.92 filter maximal_alignment_error=10 minimal_inlier_ratio=0.05 minimal_number_of_inliers=7 expected_transformation=Similarity");
+//     run("bUnwarpJ", "source_image=Aligned-0002 target_image=Aligned-0001 registration=Accurate image_subsample_factor=0 initial_deformation=[Very Coarse] final_deformation=[Fine] divergence_weight=0 curl_weight=0 landmark_weight=0 image_weight=1 consistency_weight=10 stop_threshold=0.01");
+//     selectWindow("Aligned-0001");
+//     close();
+//     selectWindow("Aligned-0002");
+//     close();
+//     selectWindow("Registered Source Image");
+//     close();
+//     selectWindow("Registered Target Image");
     run("Stack to Images");
-    run("Extract SIFT Correspondences", "source_image=Aligned-0002 target_image=Aligned-0001 initial_gaussian_blur=1.40 steps_per_scale_octave=5 minimum_image_size=32 maximum_image_size=1024 feature_descriptor_size=8 feature_descriptor_orientation_bins=8 closest/next_closest_ratio=0.92 filter maximal_alignment_error=10 minimal_inlier_ratio=0.05 minimal_number_of_inliers=7 expected_transformation=Similarity");
-    run("bUnwarpJ", "source_image=Aligned-0002 target_image=Aligned-0001 registration=Accurate image_subsample_factor=0 initial_deformation=[Very Coarse] final_deformation=[Fine] divergence_weight=0 curl_weight=0 landmark_weight=0 image_weight=1 consistency_weight=10 stop_threshold=0.01");
-    selectWindow("Aligned-0001");
-    close();
-    selectWindow("Aligned-0002");
-    close();
-    selectWindow("Registered Source Image");
-    close();
-    selectWindow("Registered Target Image");
-    run("Stack to Images");
-    selectWindow("Warped Source Mask");
-    close();
+//     selectWindow("Warped Source Mask");
+//     close();
     selectWindow("Target Image");
     run("Duplicate...", "title=warped_1");
     selectWindow("Target Image");
@@ -967,7 +981,8 @@ macro "warped heatmap" {
     selectWindow("Target Image");
     close();
     selectWindow("Result of Registered Target Image");
-    run("fire_lut_0-150");
+//     run("fire_lut_0-150");
+    run("  morgenstemning ");
     run("Images to Stack", "name=Stack title=[] use");
     rename(a);
     roiManager("Show All with labels")
@@ -1152,7 +1167,7 @@ macro "5cm_scale" {
   run("Set Scale...", "distance="+len+" known=5 unit=cm");
 }
 
-macro "measure_drought [n2]" {
+macro "measure_drought" {
   setBatchMode(true);
   title = getTitle();
   setForegroundColor(0, 0, 0);
@@ -1436,4 +1451,97 @@ macro "Wiesner Axiovert [n0]" {
     saveAs("Results", b + "Measurements/" + a + "_aligned.csv");
     run("Close All");
     setBatchMode(false);
+}
+
+macro "Better Wand Tool - C000T0f10BT7f10WTff10T" {
+   if (!isOpen("ROI Manager")) run("ROI Manager...");
+   smoothness= call('ij.Prefs.get','bwt.selectSmoothness',3);
+   getCursorLoc(x, y, z, flags);
+   id=getImageID;
+   setBatchMode(1);
+   run("Select None");
+   run("Duplicate...","title=a");
+   run("Gaussian Blur...", "radius="+smoothness);
+   id2=getImageID;
+   while (flags&16!=0) {
+    selectImage(id);
+    getCursorLoc(x1, y1, z, flags);
+    selectImage(id2);
+    doWand(x, y, 0.5*sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)), "8-connected");
+    getSelectionCoordinates(xpoints, ypoints);
+    selectImage(id);
+    Overlay.clear;
+    makeSelection("freehand", xpoints, ypoints);
+    Overlay.addSelection("green")
+    Overlay.show;
+    wait(20);
+  }
+  roiManager('add');
+  roiManager("show all with labels");
+  roiManager('select',roiManager('count')-1);
+}
+
+macro "Better Wand Tool Options" {
+   smoothness = call('ij.Prefs.get','bwt.selectSmoothness',3);
+   Dialog.create("Options");
+   Dialog.addNumber("Smoothness factor", smoothness);
+   Dialog.show();
+   smoothness= Dialog.getNumber();
+   call('ij.Prefs.set','bwt.selectSmoothness',smoothness);
+}
+
+macro "Trace shape [n2]" {
+    a = File.getNameWithoutExtension(getTitle());
+    b = getDirectory("Choose directory for saved output.");
+    roiManager("Save", b + "ROIs/" + a + ".zip");
+    run("Set Scale...", "distance=8.8106 known=1 pixel=1 unit=µm");
+    for (m = 0; m < roiManager("count"); m++){
+        roiManager("Select", m);
+        if (m < 20) 
+            cell_type = "PX";
+        else 
+            cell_type = "MX";
+        area = getValue("Area");
+        X = getValue("X");
+        Y = getValue("Y");
+        perim = getValue("Perim.");
+        width = getValue("Width");
+        height = getValue("Height");
+        major = getValue("Major");
+        minor = getValue("Minor");
+        angle = getValue("Angle");
+        circ = getValue("Circ.");
+        roundness = getValue("Round");
+        solidity = getValue("Solidity");
+        length = getValue("Length");
+        getSelectionCoordinates(x, y);
+        for (i=0; i<x.length; i++){
+            nrow = nResults;
+            setResult("cell_type", nrow, cell_type);
+            setResult("Area", nrow, area);
+            setResult("X", nrow, X);
+            setResult("Y", nrow, Y);
+            setResult("Perim.", nrow, perim);
+            setResult("Width", nrow, width);
+            setResult("Height", nrow, height);
+            setResult("Major", nrow, major);
+            setResult("Minor", nrow, minor);
+            setResult("Angle", nrow, angle);
+            setResult("Circ.", nrow, circ);
+            setResult("Round", nrow, roundness);
+            setResult("Solidity", nrow, solidity);
+            setResult("Length", nrow, length);
+            setResult("image", nrow, a);
+            setResult("point", nrow, i);
+            setResult("x", nrow, x[i]);
+            setResult("y", nrow, y[i]);
+            updateResults();
+        }
+    }
+    run("Input/Output...", "jpeg=85 gif=-1 file=.csv use_file copy_row save_column");
+    saveAs("Results", b + "Measurements/" + a + ".csv");
+    run("Close All");
+    run("Clear Results");
+    roiManager("Deselect");
+    roiManager("Delete");
 }
