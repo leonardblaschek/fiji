@@ -12,6 +12,7 @@ macro "OD_hue_part1 [n0]" {
 // if measuring poplar, make the first ROI a reference line along the cambium, and set 'Analyze -> Set Measurements...' to include centroid
 ///////////////////////
 macro "OD_hue_part2 [n1]" {
+    run("Set Measurements...", "mean display redirect=None decimal=3");
     run("Select None");
     selectWindow("Aligned_OD");
     run("Duplicate...", "duplicate");
