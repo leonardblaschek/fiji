@@ -1066,6 +1066,7 @@ macro "IF_area [n3]" {
 
 macro "OD_hue_activity [n5]" {
   dir = getDirectory("Select directory for saved ROIs");
+  interval = getNumber("Time between images [min]", 10);
   a = getTitle();
   if (roiManager("count") != 160) Dialog.create("Unexpected number of ROIs!");
   else {
@@ -1110,9 +1111,13 @@ macro "OD_hue_activity [n5]" {
         roiManager("Select", m);
         median = getValue("Median");
         setResult("median_hue", m + ((n - 1) * 160), median);
+        setResult("interval", m + ((n - 1) * 160), interval);
       }
     }
     close("*");
+    run("Input/Output...", "jpeg=85 gif=-1 file=.csv use_file copy_row save_column");
+    // save measurements
+    saveAs("Results", dir + "Measurements/" + a + ".csv");
     setBatchMode(false);
   }
 }
@@ -1316,6 +1321,47 @@ macro "stitch Wiesner" {
     saveAs("PNG", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17) + ".png");
     run("Scale...", "x=0.25 y=0.25 width=5041 height=4958 interpolation=Bilinear average create title=021-04-29_Q_4_stained.png");
     saveAs("Jpeg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17) + "_small.jpg");
+    run("Close All");
+  }
+  setBatchMode(false);
+}
+
+macro "stitch Axiovert with BG correction" {
+  setBatchMode(true);
+  dir1 = getDirectory("Choose Source Directory ");
+  dir2 = getDirectory("Choose Output Directory ");
+  subFolderList = getFileList(dir1);
+  
+  for(i=0;i<subFolderList.length;i++){
+    folder = dir1 + subFolderList[i];
+    fileList = getFileList(folder);
+    intermediateFolder = dir2 + "background_corrected/" + subFolderList[i];
+    File.makeDirectory(intermediateFolder);
+    for(j=0;j<fileList.length;j++){
+      open(folder+fileList[j]);
+      open("/home/leonard/Dropbox/2021_conferences/PCWB/presentation/images/full_sections/Axiovert_background_subtracted_from_white.png");
+      imageCalculator("Add", fileList[j], "Axiovert_background_subtracted_from_white.png");
+      saveAs("Jpeg", intermediateFolder + fileList[j]);
+      run("Close All");
+    }
+    if (fileList.length == 80) {
+      rows = 10;
+      cols = 8;
+    } else if (fileList.length == 63) {
+      rows = 9;
+      cols = 7;
+    } else if (fileList.length == 99) {
+      rows = 11;
+      cols = 9;
+    } else if (fileList.length == 48) {
+      rows = 8;
+      cols = 6;
+    }
+    run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + intermediateFolder + "] file_names=[" + substring(fileList[i], 0, lengthOf(fileList[i]) - 8) + "_m{ii}.jpg] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.7 max/avg_displacement_threshold=1.50 absolute_displacement_threshold=2.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+    run("RGB Color");
+    saveAs("Jpeg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17));
+    run("Scale...", "x=0.25 y=0.25 width=5041 height=4958 interpolation=Bilinear average create title=021-04-29_Q_4_stained.png");
+    saveAs("Jpeg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17) + "_small");
     run("Close All");
   }
   setBatchMode(false);
