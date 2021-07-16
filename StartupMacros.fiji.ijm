@@ -1064,11 +1064,69 @@ macro "IF_area [n3]" {
 //     run("Close All");
 // }
 
-macro "OD_hue_activity [n5]" {
+// macro "OD_hue_activity [n5]" {
+//   dir = getDirectory("Select directory for saved ROIs");
+//   interval = getNumber("Time between images [min]", 10);
+//   a = getTitle();
+//   if (roiManager("count") != 160) Dialog.create("Unexpected number of ROIs!");
+//   else {
+//     roiManager("Save", dir+a+".zip");
+//     setBatchMode(true);
+//     roiManager("Deselect");
+//     roiManager("Remove Channel Info");
+//     roiManager("Remove Slice Info");
+//     roiManager("Remove Frame Info");
+//     rename("Aligned_OD");
+//     run("Duplicate...", "duplicate");
+//     rename("Aligned_hue");
+//     selectWindow("Aligned_OD");
+//     run("8-bit");
+//     run("Calibrate...", "function=[Uncalibrated OD] unit=[Gray Value] text1= text2=");
+//     for (n = 1; n <= nSlices; n++) {
+//       setSlice(n);
+//       for (m = 0; m < 160; m++){
+//         roiManager("Select", m);
+//         mean = getValue("Mean");
+//         setResult("image", m + ((n - 1) * 160), a);
+//         setResult("slice", m + ((n - 1) * 160), n);
+//         if (m < 20) setResult("cell_type", m + ((n - 1) * 160), "IF");
+//         else if (m < 40) setResult("cell_type", m + ((n - 1) * 160), "CML");
+//         else if (m < 60) setResult("cell_type", m + ((n - 1) * 160), "LP");
+//         else if (m < 80) setResult("cell_type", m + ((n - 1) * 160), "MX");
+//         else if (m < 100) setResult("cell_type", m + ((n - 1) * 160), "PX");
+//         else if (m < 120) setResult("cell_type", m + ((n - 1) * 160), "XF");
+//         else if (m < 140) setResult("cell_type", m + ((n - 1) * 160), "PH");
+//         else setResult("cell_type", m + ((n - 1) * 160), "BG");
+//         setResult("mean_absorbance", m + ((n - 1) * 160), mean);
+//       }
+//     }
+//     selectWindow("Aligned_hue");
+//     run("HSB Stack");
+//     selectWindow("Aligned_hue");
+//     run("Reduce Dimensionality...", "slices");
+//     selectWindow("Aligned_hue");
+//     for (n = 1; n <= nSlices; n++) {
+//       setSlice(n);
+//       for (m = 0; m < 160; m++){
+//         roiManager("Select", m);
+//         median = getValue("Median");
+//         setResult("median_hue", m + ((n - 1) * 160), median);
+//         setResult("interval", m + ((n - 1) * 160), interval);
+//       }
+//     }
+//     close("*");
+//     run("Input/Output...", "jpeg=85 gif=-1 file=.csv use_file copy_row save_column");
+//     // save measurements
+//     saveAs("Results", dir + "Measurements/" + a + ".csv");
+//     setBatchMode(false);
+//   }
+// }
+
+macro "OD_hue_activity [n5]" { // modified version to re-measure the IF and CML of DAF pH 5
   dir = getDirectory("Select directory for saved ROIs");
   interval = getNumber("Time between images [min]", 10);
   a = getTitle();
-  if (roiManager("count") != 160) Dialog.create("Unexpected number of ROIs!");
+  if (roiManager("count") != 40) Dialog.create("Unexpected number of ROIs!");
   else {
     roiManager("Save", dir+a+".zip");
     setBatchMode(true);
@@ -1084,20 +1142,14 @@ macro "OD_hue_activity [n5]" {
     run("Calibrate...", "function=[Uncalibrated OD] unit=[Gray Value] text1= text2=");
     for (n = 1; n <= nSlices; n++) {
       setSlice(n);
-      for (m = 0; m < 160; m++){
+      for (m = 0; m < 40; m++){
         roiManager("Select", m);
         mean = getValue("Mean");
-        setResult("image", m + ((n - 1) * 160), a);
-        setResult("slice", m + ((n - 1) * 160), n);
-        if (m < 20) setResult("cell_type", m + ((n - 1) * 160), "IF");
-        else if (m < 40) setResult("cell_type", m + ((n - 1) * 160), "CML");
-        else if (m < 60) setResult("cell_type", m + ((n - 1) * 160), "LP");
-        else if (m < 80) setResult("cell_type", m + ((n - 1) * 160), "MX");
-        else if (m < 100) setResult("cell_type", m + ((n - 1) * 160), "PX");
-        else if (m < 120) setResult("cell_type", m + ((n - 1) * 160), "XF");
-        else if (m < 140) setResult("cell_type", m + ((n - 1) * 160), "PH");
-        else setResult("cell_type", m + ((n - 1) * 160), "BG");
-        setResult("mean_absorbance", m + ((n - 1) * 160), mean);
+        setResult("image", m + ((n - 1) * 40), a);
+        setResult("slice", m + ((n - 1) * 40), n);
+        if (m < 20) setResult("cell_type", m + ((n - 1) * 40), "IF");
+        else if (m < 40) setResult("cell_type", m + ((n - 1) * 40), "CML");
+        setResult("mean_absorbance", m + ((n - 1) * 40), mean);
       }
     }
     selectWindow("Aligned_hue");
@@ -1107,11 +1159,11 @@ macro "OD_hue_activity [n5]" {
     selectWindow("Aligned_hue");
     for (n = 1; n <= nSlices; n++) {
       setSlice(n);
-      for (m = 0; m < 160; m++){
+      for (m = 0; m < 40; m++){
         roiManager("Select", m);
         median = getValue("Median");
-        setResult("median_hue", m + ((n - 1) * 160), median);
-        setResult("interval", m + ((n - 1) * 160), interval);
+        setResult("median_hue", m + ((n - 1) * 40), median);
+        setResult("interval", m + ((n - 1) * 40), interval);
       }
     }
     close("*");
