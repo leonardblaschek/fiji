@@ -1391,9 +1391,9 @@ macro "stitch Axiovert with BG correction" {
     File.makeDirectory(intermediateFolder);
     for(j=0;j<fileList.length;j++){
       open(folder+fileList[j]);
-      open("/home/leonard/Dropbox/2021_conferences/PCWB/presentation/images/full_sections/Axiovert_background_subtracted_from_white.png");
-      imageCalculator("Add", fileList[j], "Axiovert_background_subtracted_from_white.png");
-      saveAs("Jpeg", intermediateFolder + fileList[j]);
+      open("/run/media/leonard/data/grsync/data/PhD/Maule/2021-08-24_lac_mutants/2021-08-24_blank-subtracted-from-white.png");
+      imageCalculator("Add", fileList[j], "2021-08-24_blank-subtracted-from-white.png");
+      saveAs("PNG", intermediateFolder + fileList[j]);
       run("Close All");
     }
     if (fileList.length == 80) {
@@ -1409,9 +1409,9 @@ macro "stitch Axiovert with BG correction" {
       rows = 8;
       cols = 6;
     }
-    run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + intermediateFolder + "] file_names=[" + substring(fileList[i], 0, lengthOf(fileList[i]) - 8) + "_m{ii}.jpg] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.7 max/avg_displacement_threshold=1.50 absolute_displacement_threshold=2.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+    run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + intermediateFolder + "] file_names=[" + substring(fileList[i], 0, lengthOf(fileList[i]) - 8) + "_m{ii}.png] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.2 max/avg_displacement_threshold=1.50 absolute_displacement_threshold=2.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
     run("RGB Color");
-    saveAs("Jpeg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17));
+    saveAs("PNG", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17));
     run("Scale...", "x=0.25 y=0.25 width=5041 height=4958 interpolation=Bilinear average create title=021-04-29_Q_4_stained.png");
     saveAs("Jpeg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17) + "_small");
     run("Close All");
