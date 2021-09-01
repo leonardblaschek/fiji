@@ -1064,69 +1064,11 @@ macro "IF_area [n3]" {
 //     run("Close All");
 // }
 
-// macro "OD_hue_activity [n5]" {
-//   dir = getDirectory("Select directory for saved ROIs");
-//   interval = getNumber("Time between images [min]", 10);
-//   a = getTitle();
-//   if (roiManager("count") != 160) Dialog.create("Unexpected number of ROIs!");
-//   else {
-//     roiManager("Save", dir+a+".zip");
-//     setBatchMode(true);
-//     roiManager("Deselect");
-//     roiManager("Remove Channel Info");
-//     roiManager("Remove Slice Info");
-//     roiManager("Remove Frame Info");
-//     rename("Aligned_OD");
-//     run("Duplicate...", "duplicate");
-//     rename("Aligned_hue");
-//     selectWindow("Aligned_OD");
-//     run("8-bit");
-//     run("Calibrate...", "function=[Uncalibrated OD] unit=[Gray Value] text1= text2=");
-//     for (n = 1; n <= nSlices; n++) {
-//       setSlice(n);
-//       for (m = 0; m < 160; m++){
-//         roiManager("Select", m);
-//         mean = getValue("Mean");
-//         setResult("image", m + ((n - 1) * 160), a);
-//         setResult("slice", m + ((n - 1) * 160), n);
-//         if (m < 20) setResult("cell_type", m + ((n - 1) * 160), "IF");
-//         else if (m < 40) setResult("cell_type", m + ((n - 1) * 160), "CML");
-//         else if (m < 60) setResult("cell_type", m + ((n - 1) * 160), "LP");
-//         else if (m < 80) setResult("cell_type", m + ((n - 1) * 160), "MX");
-//         else if (m < 100) setResult("cell_type", m + ((n - 1) * 160), "PX");
-//         else if (m < 120) setResult("cell_type", m + ((n - 1) * 160), "XF");
-//         else if (m < 140) setResult("cell_type", m + ((n - 1) * 160), "PH");
-//         else setResult("cell_type", m + ((n - 1) * 160), "BG");
-//         setResult("mean_absorbance", m + ((n - 1) * 160), mean);
-//       }
-//     }
-//     selectWindow("Aligned_hue");
-//     run("HSB Stack");
-//     selectWindow("Aligned_hue");
-//     run("Reduce Dimensionality...", "slices");
-//     selectWindow("Aligned_hue");
-//     for (n = 1; n <= nSlices; n++) {
-//       setSlice(n);
-//       for (m = 0; m < 160; m++){
-//         roiManager("Select", m);
-//         median = getValue("Median");
-//         setResult("median_hue", m + ((n - 1) * 160), median);
-//         setResult("interval", m + ((n - 1) * 160), interval);
-//       }
-//     }
-//     close("*");
-//     run("Input/Output...", "jpeg=85 gif=-1 file=.csv use_file copy_row save_column");
-//     // save measurements
-//     saveAs("Results", dir + "Measurements/" + a + ".csv");
-//     setBatchMode(false);
-//   }
-// }
-
-macro "OD_hue_activity [n5]" { // modified version to re-measure the IF and CML of DAF pH 5
+macro "OD_hue_activity [n5]" {
   dir = getDirectory("Select directory for saved ROIs");
-  interval = getNumber("Time between images [min]", 10);
+  interval = getNumber("Time between images [min]", 15);
   a = getTitle();
-  if (roiManager("count") != 40) Dialog.create("Unexpected number of ROIs!");
+  if (roiManager("count") != 160) Dialog.create("Unexpected number of ROIs!");
   else {
     roiManager("Save", dir+a+".zip");
     setBatchMode(true);
@@ -1142,14 +1084,20 @@ macro "OD_hue_activity [n5]" { // modified version to re-measure the IF and CML 
     run("Calibrate...", "function=[Uncalibrated OD] unit=[Gray Value] text1= text2=");
     for (n = 1; n <= nSlices; n++) {
       setSlice(n);
-      for (m = 0; m < 40; m++){
+      for (m = 0; m < 160; m++){
         roiManager("Select", m);
         mean = getValue("Mean");
-        setResult("image", m + ((n - 1) * 40), a);
-        setResult("slice", m + ((n - 1) * 40), n);
-        if (m < 20) setResult("cell_type", m + ((n - 1) * 40), "IF");
-        else if (m < 40) setResult("cell_type", m + ((n - 1) * 40), "CML");
-        setResult("mean_absorbance", m + ((n - 1) * 40), mean);
+        setResult("image", m + ((n - 1) * 160), a);
+        setResult("slice", m + ((n - 1) * 160), n);
+        if (m < 20) setResult("cell_type", m + ((n - 1) * 160), "IF");
+        else if (m < 40) setResult("cell_type", m + ((n - 1) * 160), "CML");
+        else if (m < 60) setResult("cell_type", m + ((n - 1) * 160), "LP");
+        else if (m < 80) setResult("cell_type", m + ((n - 1) * 160), "MX");
+        else if (m < 100) setResult("cell_type", m + ((n - 1) * 160), "PX");
+        else if (m < 120) setResult("cell_type", m + ((n - 1) * 160), "XF");
+        else if (m < 140) setResult("cell_type", m + ((n - 1) * 160), "PH");
+        else setResult("cell_type", m + ((n - 1) * 160), "BG");
+        setResult("mean_absorbance", m + ((n - 1) * 160), mean);
       }
     }
     selectWindow("Aligned_hue");
@@ -1159,11 +1107,11 @@ macro "OD_hue_activity [n5]" { // modified version to re-measure the IF and CML 
     selectWindow("Aligned_hue");
     for (n = 1; n <= nSlices; n++) {
       setSlice(n);
-      for (m = 0; m < 40; m++){
+      for (m = 0; m < 160; m++){
         roiManager("Select", m);
         median = getValue("Median");
-        setResult("median_hue", m + ((n - 1) * 40), median);
-        setResult("interval", m + ((n - 1) * 40), interval);
+        setResult("median_hue", m + ((n - 1) * 160), median);
+        setResult("interval", m + ((n - 1) * 160), interval);
       }
     }
     close("*");
@@ -1173,6 +1121,58 @@ macro "OD_hue_activity [n5]" { // modified version to re-measure the IF and CML 
     setBatchMode(false);
   }
 }
+
+// macro "OD_hue_activity [n5]" { // modified version to re-measure the IF and CML of DAF pH 5
+//   dir = getDirectory("Select directory for saved ROIs");
+//   interval = getNumber("Time between images [min]", 15);
+//   a = getTitle();
+//   if (roiManager("count") != 40) Dialog.create("Unexpected number of ROIs!");
+//   else {
+//     roiManager("Save", dir+a+".zip");
+//     setBatchMode(true);
+//     roiManager("Deselect");
+//     roiManager("Remove Channel Info");
+//     roiManager("Remove Slice Info");
+//     roiManager("Remove Frame Info");
+//     rename("Aligned_OD");
+//     run("Duplicate...", "duplicate");
+//     rename("Aligned_hue");
+//     selectWindow("Aligned_OD");
+//     run("8-bit");
+//     run("Calibrate...", "function=[Uncalibrated OD] unit=[Gray Value] text1= text2=");
+//     for (n = 1; n <= nSlices; n++) {
+//       setSlice(n);
+//       for (m = 0; m < 40; m++){
+//         roiManager("Select", m);
+//         mean = getValue("Mean");
+//         setResult("image", m + ((n - 1) * 40), a);
+//         setResult("slice", m + ((n - 1) * 40), n);
+//         if (m < 20) setResult("cell_type", m + ((n - 1) * 40), "IF");
+//         else if (m < 40) setResult("cell_type", m + ((n - 1) * 40), "CML");
+//         setResult("mean_absorbance", m + ((n - 1) * 40), mean);
+//       }
+//     }
+//     selectWindow("Aligned_hue");
+//     run("HSB Stack");
+//     selectWindow("Aligned_hue");
+//     run("Reduce Dimensionality...", "slices");
+//     selectWindow("Aligned_hue");
+//     for (n = 1; n <= nSlices; n++) {
+//       setSlice(n);
+//       for (m = 0; m < 40; m++){
+//         roiManager("Select", m);
+//         median = getValue("Median");
+//         setResult("median_hue", m + ((n - 1) * 40), median);
+//         setResult("interval", m + ((n - 1) * 40), interval);
+//       }
+//     }
+//     close("*");
+//     run("Input/Output...", "jpeg=85 gif=-1 file=.csv use_file copy_row save_column");
+//     // save measurements
+//     saveAs("Results", dir + "Measurements/" + a + ".csv");
+//     setBatchMode(false);
+//   }
+// }
 
 macro "add_raman_crosshairs" {
 //visualise the center of the individual images in the stitched mosaic
@@ -1391,9 +1391,9 @@ macro "stitch Axiovert with BG correction" {
     File.makeDirectory(intermediateFolder);
     for(j=0;j<fileList.length;j++){
       open(folder+fileList[j]);
-      open("/run/media/leonard/data/grsync/data/PhD/Maule/2021-08-24_lac_mutants/2021-08-24_blank-subtracted-from-white.png");
+      open("/data/PhD/Maule/2021-08-24_lac_mutants/2021-08-24_blank-subtracted-from-white.png");
       imageCalculator("Add", fileList[j], "2021-08-24_blank-subtracted-from-white.png");
-      saveAs("PNG", intermediateFolder + fileList[j]);
+      saveAs("Jpeg", intermediateFolder + fileList[j]);
       run("Close All");
     }
     if (fileList.length == 80) {
@@ -1409,10 +1409,10 @@ macro "stitch Axiovert with BG correction" {
       rows = 8;
       cols = 6;
     }
-    run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + intermediateFolder + "] file_names=[" + substring(fileList[i], 0, lengthOf(fileList[i]) - 8) + "_m{ii}.png] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.2 max/avg_displacement_threshold=1.50 absolute_displacement_threshold=2.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+    run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + intermediateFolder + "] file_names=[" + substring(fileList[i], 0, lengthOf(fileList[i]) - 8) + "_m{ii}.jpg] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.2 max/avg_displacement_threshold=1.50 absolute_displacement_threshold=2.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
     run("RGB Color");
-    saveAs("PNG", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17));
-    run("Scale...", "x=0.25 y=0.25 width=5041 height=4958 interpolation=Bilinear average create title=021-04-29_Q_4_stained.png");
+    saveAs("Jpeg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17));
+    run("Scale...", "x=0.25 y=0.25 width=5041 height=4958 interpolation=Bilinear average create title=small");
     saveAs("Jpeg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17) + "_small");
     run("Close All");
   }
