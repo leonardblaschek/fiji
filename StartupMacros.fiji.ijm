@@ -757,7 +757,7 @@ macro "save all" {
 }
 
 // "IRX measurements with pixel by pixel Wiesner absorbance"
-macro "rotate to 0 [n7]" {
+macro "rotate to 0" {
   //     run("Set Scale...", "distance=5.9 known=1 pixel=1 unit=µm");
   a = getTitle();
   run("Set Measurements...", "area centroid center perimeter bounding fit shape feret's redirect=None decimal=3");
@@ -1219,8 +1219,8 @@ for (i=0; i<list.length; i++) {
   close("*")
 }
 
-macro "5cm_scale" {
-  len = getValue("Length")
+macro "5cm_scale [n7]" {
+  len = getValue("Length raw")
   run("Set Scale...", "distance="+len+" known=5 unit=cm");
 }
 
@@ -1393,6 +1393,7 @@ macro "stitch Axiovert with BG correction" {
       open(folder+fileList[j]);
       open("/data/PhD/Maule/2021-08-24_lac_mutants/2021-08-24_blank-subtracted-from-white.png");
       imageCalculator("Add", fileList[j], "2021-08-24_blank-subtracted-from-white.png");
+      run("RGB Color");
       saveAs("Jpeg", intermediateFolder + fileList[j]);
       run("Close All");
     }
