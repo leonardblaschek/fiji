@@ -1368,10 +1368,10 @@ macro "stitch Wiesner" {
       rows = 8;
       cols = 6;
     }
-    run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + folder + "] file_names=[" + substring(folderList[i], 0, lengthOf(folderList[i]) - 8) + "_m{ii}.png] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.25 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+    run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + folder + "] file_names=[" + substring(folderList[i], 0, lengthOf(folderList[i]) - 8) + "_m{ii}.jpg] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.25 max/avg_displacement_threshold=2.50 absolute_displacement_threshold=3.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
     run("RGB Color");
-    saveAs("PNG", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17) + ".png");
-    run("Scale...", "x=0.25 y=0.25 width=5041 height=4958 interpolation=Bilinear average create title=021-04-29_Q_4_stained.png");
+    saveAs("Jpeg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17) + ".jpg");
+    run("Scale...", "x=0.25 y=0.25 width=5041 height=4958 interpolation=Bilinear average create title=small");
     saveAs("Jpeg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17) + "_small.jpg");
     run("Close All");
   }
@@ -1391,8 +1391,8 @@ macro "stitch Axiovert with BG correction" {
     File.makeDirectory(intermediateFolder);
     for(j=0;j<fileList.length;j++){
       open(folder+fileList[j]);
-      open("/data/PhD/Maule/2021-08-24_lac_mutants/2021-08-24_blank-subtracted-from-white.png");
-      imageCalculator("Add", fileList[j], "2021-08-24_blank-subtracted-from-white.png");
+      open("/data/PhD/Safranin-Astra/2021-09-09_lac-mutants/2021-09-09_blank_subtracted_from_white.png");
+      imageCalculator("Add", fileList[j], "2021-09-09_blank_subtracted_from_white.png");
       run("RGB Color");
       saveAs("Jpeg", intermediateFolder + fileList[j]);
       run("Close All");
