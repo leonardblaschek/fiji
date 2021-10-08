@@ -1391,8 +1391,8 @@ macro "stitch Axiovert with BG correction" {
     File.makeDirectory(intermediateFolder);
     for(j=0;j<fileList.length;j++){
       open(folder+fileList[j]);
-      open("/data/PhD/Safranin-Astra/2021-09-09_lac-mutants/2021-09-09_blank_subtracted_from_white.png");
-      imageCalculator("Add", fileList[j], "2021-09-09_blank_subtracted_from_white.png");
+      open("/data/PhD/Safranin-Astra/2021-09-22_lac-mutants/2021-09-22_blank subtracted_from_white.jpg");
+      imageCalculator("Add", fileList[j], "2021-09-22_blank subtracted_from_white.jpg");
       run("RGB Color");
       saveAs("Jpeg", intermediateFolder + fileList[j]);
       run("Close All");
@@ -1409,7 +1409,17 @@ macro "stitch Axiovert with BG correction" {
     } else if (fileList.length == 48) {
       rows = 8;
       cols = 6;
+    } else if (fileList.length == 30) {
+      rows = 6;
+      cols = 5;
+    } else if (fileList.length == 16) {
+      rows = 4;
+      cols = 4;
+    } else if (fileList.length == 9) {
+      rows = 3;
+      cols = 3;
     }
+    
     run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + intermediateFolder + "] file_names=[" + substring(fileList[i], 0, lengthOf(fileList[i]) - 8) + "_m{ii}.jpg] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.2 max/avg_displacement_threshold=1.50 absolute_displacement_threshold=2.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
     run("RGB Color");
     saveAs("Jpeg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17));
@@ -1589,7 +1599,7 @@ macro "Better Wand Tool Options" {
    call('ij.Prefs.set','bwt.selectSmoothness',smoothness);
 }
 
-macro "Trace shape [n2]" {
+macro "Trace shape" {
     a = File.getNameWithoutExtension(getTitle());
     b = getDirectory("Choose directory for saved output.");
     roiManager("Save", b + "ROIs/" + a + ".zip");
@@ -1643,4 +1653,188 @@ macro "Trace shape [n2]" {
     run("Clear Results");
     roiManager("Deselect");
     roiManager("Delete");
+}
+
+macro "Cell wall swelling [n2]" {
+  // rough alignment of whole sections
+  a = File.getNameWithoutExtension(getTitle());
+  b = getDirectory("Choose directory for saved output.");
+  run("Images to Stack", "name=Stack title=[] use");
+  run("Linear Stack Alignment with SIFT", "initial_gaussian_blur=1.60 steps_per_scale_octave=3 minimum_image_size=64 maximum_image_size=1024 feature_descriptor_size=4 feature_descriptor_orientation_bins=8 closest/next_closest_ratio=0.92 maximal_alignment_error=25 inlier_ratio=0.05 expected_transformation=Rigid interpolate");
+  selectWindow("Stack");
+  close();
+  // select bundle and make a fine alignment
+  waitForUser("Cropping", "Select rectangular area of interest.");
+  run("Crop");
+  run("Linear Stack Alignment with SIFT", "initial_gaussian_blur=1.60 steps_per_scale_octave=3 minimum_image_size=64 maximum_image_size=1024 feature_descriptor_size=4 feature_descriptor_orientation_bins=8 closest/next_closest_ratio=0.92 maximal_alignment_error=25 inlier_ratio=0.05 expected_transformation=Rigid interpolate");
+  rename(a);
+  roiManager("Show All with labels")
+  // manually create ROIs to be measured (in order)
+  waitForUser("Create ROIs", "Create line ROIs for each state of 10 IF and 10 MX\n (1 fresh -> 1 dry -> 1 rehydrated -> 2 fresh etc.)");
+  // save fine alignment
+  saveAs("tif", b + "Aligned/" + a + "_aligned.tif");
+  // save ROIs
+  roiManager("Save", b + "ROIs/" + a + "_aligned.zip");
+  run("Set Measurements...", "redirect=None decimal=3");
+  run("Set Scale...", "distance=8.8106 known=1 pixel=1 unit=µm");
+  run("Select None");
+  selectWindow(a + "_aligned.tif");
+  roiManager("Measure");
+  // define cell type by ROI number
+  for (m = 0; m < 60; m++) {
+    if (m < 30) {
+      setResult("image", m, a);
+      setResult("cell_type", m, "IF");
+    } else {
+      setResult("image", m, a);
+      setResult("cell_type", m, "MX");
+    }
+    if (m == 0||m == 3||m == 6||m == 9||m == 12||m == 15||m == 18||m == 21||m == 24||m == 27||m == 30||m == 33||m == 36||m == 39||m == 42||m == 45||m == 48||m == 51||m == 54||m == 57) {
+      setResult("state", m, "fresh");
+    } else if (m == 1||m == 4||m == 7||m == 10||m == 13||m == 16||m == 19||m == 22||m == 25||m == 28||m == 31||m == 34||m == 37||m == 40||m == 43||m == 46||m == 49||m == 52||m == 55||m == 58) {
+      setResult("state", m, "dry");
+    } else {
+      setResult("state", m, "rehydrated");
+  }
+  run("Input/Output...", "jpeg=85 gif=-1 file=.csv use_file copy_row save_column");
+  // save measurements
+  saveAs("Results", b + "Measurements/" + a + "_aligned.csv");
+  run("Close All");
+}
+
+macro "split czi" {
+  setBatchMode(true);
+  dir = getDirectory("Choose source directory")
+  fileList = getFileList(dir);
+  
+  for(j=0;j<fileList.length;j++){
+    name = File.getNameWithoutExtension(dir+fileList[j]);
+    out = dir + name + "/";
+    File.makeDirectory(out);
+    
+    call("ij.Prefs.set", "bioformats.zeissczi.allow.autostitch", "false");
+    run("Bio-Formats Macro Extensions");
+    Ext.setId(dir+fileList[j]);
+    Ext.getSeriesCount(seriesCount);
+    for (s=0; s<=seriesCount; s++) {
+      run("Bio-Formats Importer", "open="+dir+fileList[j]+" autoscale color_mode=Default view=Hyperstack stack_order=XYCZT series_" + s);
+      title = getTitle();
+      print(title);
+      saveAs("tiff", out + title);
+      close();
+    }
+  }
+  setBatchMode(false);
+}
+
+macro "Import Results Table" {
+  requires("1.35r");
+  lineseparator = "\n";
+  cellseparator = ",\t";
+  
+  // copies the whole RT to an array of lines
+  lines=split(File.openAsString(""), lineseparator);
+  
+  // recreates the columns headers
+  labels=split(lines[0], cellseparator);
+  if (labels[0]==" ")
+    k=1; // it is an ImageJ Results table, skip first column
+    else
+      k=0; // it is not a Results table, load all columns
+      for (j=k; j<labels.length; j++)
+        setResult(labels[j],0,0);
+      
+      // dispatches the data into the new RT
+      run("Clear Results");
+    for (i=1; i<lines.length; i++) {
+      items=split(lines[i], cellseparator);
+      for (j=k; j<items.length; j++)
+        setResult(labels[j],i-1,items[j]);
+    }
+    updateResults();
+}
+
+macro "BG correct seedlings" {
+  setBatchMode(true);
+  dir = getDirectory("Choose folder containing subfolders to be stitched");
+  lineseparator = "\n";
+  cellseparator = ",\t";
+  
+  // copies the whole RT to an array of lines
+  lines=split(File.openAsString("/data/PhD/IRX/Casparian_strip/grid_dimensions.csv"), lineseparator);
+  
+  // recreates the columns headers
+  labels=split(lines[0], cellseparator);
+  if (labels[0]==" ")
+    k=1; // it is an ImageJ Results table, skip first column
+    else
+      k=0; // it is not a Results table, load all columns
+      for (j=k; j<labels.length; j++)
+        setResult(labels[j],0,0);
+      
+      // dispatches the data into the new RT
+      run("Clear Results");
+    for (i=1; i<lines.length; i++) {
+      items=split(lines[i], cellseparator);
+      for (j=k; j<items.length; j++)
+        setResult(labels[j],i-1,items[j]);
+    }
+    updateResults();
+  
+  for(n = 0; n < nResults; n++){
+    file = getResultString("file", n);
+    folder = dir + file + "/";
+    fileList = getFileList(folder);
+    File.makeDirectory(folder + "background_corrected/");
+    for(j=0;j<fileList.length;j++){
+      if (endsWith(fileList[j], ".tif")) {
+        open(folder+fileList[j]);
+        open("/data/PhD/IRX/Casparian_strip/correction_stack.tif");
+        imageCalculator("Add stack", fileList[j], "correction_stack.tif");
+        saveAs("tif", folder + "background_corrected/" + fileList[j]);
+        run("Close All");
+      }
+    }
+  }
+  setBatchMode(false);
+}
+
+macro "stitch seedlings" {
+  setBatchMode(true);
+  dir = getDirectory("Choose folder containing subfolders to be stitched");
+  dir2 = getDirectory("Choose output folder");
+  lineseparator = "\n";
+  cellseparator = ",\t";
+  
+  // copies the whole RT to an array of lines
+  lines=split(File.openAsString("/data/PhD/IRX/Casparian_strip/grid_dimensions.csv"), lineseparator);
+  
+  // recreates the columns headers
+  labels=split(lines[0], cellseparator);
+  if (labels[0]==" ")
+    k=1; // it is an ImageJ Results table, skip first column
+    else
+      k=0; // it is not a Results table, load all columns
+      for (j=k; j<labels.length; j++)
+        setResult(labels[j],0,0);
+      
+      // dispatches the data into the new RT
+      run("Clear Results");
+    for (i=1; i<lines.length; i++) {
+      items=split(lines[i], cellseparator);
+      for (j=k; j<items.length; j++)
+        setResult(labels[j],i-1,items[j]);
+    }
+    updateResults();
+    
+    for(n = 0; n < nResults; n++){
+      file = getResultString("file", n);
+      folder = dir + file + "/";
+      fileList = getFileList(folder);
+      rows = getResult("rows", n);
+      cols = getResult("columns", n);
+      run("Grid/Collection stitching", "type=[Unknown position] order=[All files in directory] directory=[" + folder + "background_corrected/] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.50 max/avg_displacement_threshold=1.50 absolute_displacement_threshold=1.50 subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+      saveAs("tif", dir2 + file + "_stitched");
+    }
+  setBatchMode(false);
 }
