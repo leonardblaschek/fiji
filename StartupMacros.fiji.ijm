@@ -1380,8 +1380,31 @@ macro "stitch Wiesner" {
 
 macro "stitch Axiovert with BG correction" {
   setBatchMode(true);
-  dir1 = getDirectory("Choose Source Directory ");
-  dir2 = getDirectory("Choose Output Directory ");
+  Dialog.create("Stitch tiled images from the Axiovert 200M");
+  Dialog.addDirectory("Select input folder containing subfolders with exported images", "/");
+  Dialog.addDirectory("Select output folder", "/");
+  Dialog.addFile("Select image containing only background for shading correction", "/");
+  Dialog.addChoice("Select file format of input", newArray("jpg", "png", "tif"), "jpg");
+  Dialog.addChoice("Choose file format for output", newArray("jpg", "png", "tif"), "jpg");
+  Dialog.show();
+  dir1 = Dialog.getString();
+  dir2 = Dialog.getString();
+  bg = Dialog.getString();
+  intype = Dialog.getChoice();
+  type = Dialog.getChoice();
+//   dir1 = getDirectory("Choose Source Directory");
+//   dir2 = getDirectory("Choose Output Directory");
+//   bg = File.openDialog("Select image containing only background for shading correction");
+  File.makeDirectory(dir2 + "background_corrected/");
+  open(bg);
+  rename("background");
+  w = getWidth();
+  h = getHeight();
+  newImage("white", "RGB white", w, h, 1);
+  imageCalculator("Subtract create", "white","background");
+  run("RGB Color");
+  saveAs(type, dir2 + "shading_correction");
+  run("Close All");
   subFolderList = getFileList(dir1);
   
   for(i=0;i<subFolderList.length;i++){
@@ -1391,10 +1414,9 @@ macro "stitch Axiovert with BG correction" {
     File.makeDirectory(intermediateFolder);
     for(j=0;j<fileList.length;j++){
       open(folder+fileList[j]);
-      open("/data/PhD/Safranin-Astra/2021-09-22_lac-mutants/2021-09-22_blank subtracted_from_white.jpg");
-      imageCalculator("Add", fileList[j], "2021-09-22_blank subtracted_from_white.jpg");
-      run("RGB Color");
-      saveAs("Jpeg", intermediateFolder + fileList[j]);
+      open(dir2 + "shading_correction." + type);
+      imageCalculator("Add", fileList[j], "shading_correction." + type);
+      saveAs(type, intermediateFolder + fileList[j]);
       run("Close All");
     }
     if (fileList.length == 80) {
@@ -1420,11 +1442,11 @@ macro "stitch Axiovert with BG correction" {
       cols = 3;
     }
     
-    run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + intermediateFolder + "] file_names=[" + substring(fileList[i], 0, lengthOf(fileList[i]) - 8) + "_m{ii}.jpg] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.2 max/avg_displacement_threshold=1.50 absolute_displacement_threshold=2.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+    run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + intermediateFolder + "] file_names=[" + substring(fileList[i], 0, lengthOf(fileList[i]) - 8) + "_m{ii}." + intype + "] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.5 max/avg_displacement_threshold=1.50 absolute_displacement_threshold=2.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
     run("RGB Color");
-    saveAs("Jpeg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17));
-    run("Scale...", "x=0.25 y=0.25 width=5041 height=4958 interpolation=Bilinear average create title=small");
-    saveAs("Jpeg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17) + "_small");
+    saveAs(type, dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17));
+    run("Scale...", "x=0.25 y=0.25 interpolation=Bilinear average create title=small");
+    saveAs("jpg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17) + "_small");
     run("Close All");
   }
   setBatchMode(false);
