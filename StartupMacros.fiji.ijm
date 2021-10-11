@@ -1384,13 +1384,11 @@ macro "stitch Axiovert with BG correction" {
   Dialog.addDirectory("Select input folder containing subfolders with exported images", "/");
   Dialog.addDirectory("Select output folder", "/");
   Dialog.addFile("Select image containing only background for shading correction", "/");
-  Dialog.addChoice("Select file format of input", newArray("jpg", "png", "tif"), "jpg");
   Dialog.addChoice("Choose file format for output", newArray("jpg", "png", "tif"), "jpg");
   Dialog.show();
   dir1 = Dialog.getString();
   dir2 = Dialog.getString();
   bg = Dialog.getString();
-  intype = Dialog.getChoice();
   type = Dialog.getChoice();
 //   dir1 = getDirectory("Choose Source Directory");
 //   dir2 = getDirectory("Choose Output Directory");
@@ -1442,7 +1440,7 @@ macro "stitch Axiovert with BG correction" {
       cols = 3;
     }
     
-    run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + intermediateFolder + "] file_names=[" + substring(fileList[i], 0, lengthOf(fileList[i]) - 8) + "_m{ii}." + intype + "] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.5 max/avg_displacement_threshold=1.50 absolute_displacement_threshold=2.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+    run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + intermediateFolder + "] file_names=[" + substring(fileList[i], 0, lengthOf(fileList[i]) - 8) + "_m{ii}." + type + "] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.5 max/avg_displacement_threshold=1.50 absolute_displacement_threshold=2.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
     run("RGB Color");
     saveAs(type, dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17));
     run("Scale...", "x=0.25 y=0.25 interpolation=Bilinear average create title=small");
