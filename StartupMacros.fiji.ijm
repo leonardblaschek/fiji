@@ -1387,7 +1387,7 @@ macro "stitch Axiovert with BG correction" {
   Dialog.addFile("Select image containing only background for shading correction", "");
   Dialog.addChoice("Choose file format for output", newArray("jpg", "png", "tif"), "jpg");
   Dialog.addSlider("Regression threshold for stitching*", 0, 1, 0.75);
-  Dialog.addMessage("*Increase if tiles are matched incorrectly, decrease if stitched images has 'holes'", 10);
+  Dialog.addMessage("*Increase if tiles are matched incorrectly, decrease if stitched images have 'holes'", 10);
   Dialog.addHelp("<html> This macro uses the 'Grid/Collection Stitching' plugin by Stephan Preibisch, see <a href = 'https://imagej.net'>https://imagej.net</a> for more info.")
   Dialog.show();
   
