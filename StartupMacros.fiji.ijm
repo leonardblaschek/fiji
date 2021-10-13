@@ -1736,6 +1736,7 @@ macro "Cell wall swelling [n2]" {
       setResult("state", m, "dry");
     } else {
       setResult("state", m, "rehydrated");
+    }
   }
   run("Input/Output...", "jpeg=85 gif=-1 file=.csv use_file copy_row save_column");
   // save measurements
