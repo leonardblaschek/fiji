@@ -1380,19 +1380,23 @@ macro "stitch Wiesner" {
 
 macro "stitch Axiovert with BG correction" {
   setBatchMode(true);
+  
   Dialog.create("Stitch tiled images from the Axiovert 200M");
-  Dialog.addDirectory("Select input folder containing subfolders with exported images", "/");
-  Dialog.addDirectory("Select output folder", "/");
-  Dialog.addFile("Select image containing only background for shading correction", "/");
+  Dialog.addDirectory("Select input folder containing subfolders with exported images", "");
+  Dialog.addDirectory("Select output folder", "");
+  Dialog.addFile("Select image containing only background for shading correction", "");
   Dialog.addChoice("Choose file format for output", newArray("jpg", "png", "tif"), "jpg");
+  Dialog.addSlider("Regression threshold for stitching*", 0, 1, 0.75);
+  Dialog.addMessage("*Increase if tiles are matched incorrectly, decrease if stitched images has 'holes'", 10);
+  Dialog.addHelp("<html> This macro uses the 'Grid/Collection Stitching' plugin by Stephan Preibisch, see <a href = 'https://imagej.net'>https://imagej.net</a> for more info.")
   Dialog.show();
+  
   dir1 = Dialog.getString();
   dir2 = Dialog.getString();
   bg = Dialog.getString();
   type = Dialog.getChoice();
-//   dir1 = getDirectory("Choose Source Directory");
-//   dir2 = getDirectory("Choose Output Directory");
-//   bg = File.openDialog("Select image containing only background for shading correction");
+  threshold = Dialog.getNumber();
+  
   File.makeDirectory(dir2 + "background_corrected/");
   open(bg);
   rename("background");
@@ -1410,6 +1414,7 @@ macro "stitch Axiovert with BG correction" {
     fileList = getFileList(folder);
     intermediateFolder = dir2 + "background_corrected/" + subFolderList[i];
     File.makeDirectory(intermediateFolder);
+    
     for(j=0;j<fileList.length;j++){
       open(folder+fileList[j]);
       open(dir2 + "shading_correction." + type);
@@ -1417,30 +1422,46 @@ macro "stitch Axiovert with BG correction" {
       saveAs(type, intermediateFolder + fileList[j]);
       run("Close All");
     }
+    
     if (fileList.length == 80) {
       rows = 10;
       cols = 8;
+      numbering = "m{ii}.";
     } else if (fileList.length == 63) {
       rows = 9;
       cols = 7;
+      numbering = "m{ii}.";
     } else if (fileList.length == 99) {
       rows = 11;
       cols = 9;
+      numbering = "m{ii}.";
+    } else if (fileList.length == 120) {
+      rows = 12;
+      cols = 10;
+      numbering = "{iii}.";
+    } else if (fileList.length == 130) {
+      rows = 13;
+      cols = 10;
+      numbering = "{iii}.";
     } else if (fileList.length == 48) {
       rows = 8;
       cols = 6;
+      numbering = "m{ii}.";
     } else if (fileList.length == 30) {
       rows = 6;
       cols = 5;
+      numbering = "m{ii}.";
     } else if (fileList.length == 16) {
       rows = 4;
       cols = 4;
+      numbering = "m{ii}.";
     } else if (fileList.length == 9) {
       rows = 3;
       cols = 3;
+      numbering = "_m{i}.";
     }
     
-    run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + intermediateFolder + "] file_names=[" + substring(fileList[i], 0, lengthOf(fileList[i]) - 8) + "_m{ii}." + type + "] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=0.5 max/avg_displacement_threshold=1.50 absolute_displacement_threshold=2.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+    run("Grid/Collection stitching", "type=[Grid: snake by rows] order=[Left & Up] grid_size_x=" + cols + " grid_size_y=" + rows + " tile_overlap=20 first_file_index_i=1 directory=[" + intermediateFolder + "] file_names=[" + substring(fileList[i], 0, lengthOf(fileList[i]) - 7) + numbering + type + "] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=" + threshold + " max/avg_displacement_threshold=1.50 absolute_displacement_threshold=2.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
     run("RGB Color");
     saveAs(type, dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17));
     run("Scale...", "x=0.25 y=0.25 interpolation=Bilinear average create title=small");
