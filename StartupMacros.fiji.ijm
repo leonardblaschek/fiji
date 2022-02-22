@@ -921,8 +921,8 @@ macro "get line profile [n4]" {
   a=getTitle();
   roiManager("Save", dir1+a+"_roi.zip");
   saveAs("tiff", dir1+a);
-  roiManager("Remove Slice Info");
-  setSlice(3);
+//   roiManager("Remove Slice Info");
+//   setSlice(3);
   for (m = 0; m < roiManager("count"); m++){
         roiManager("Select", m);
         profile = 0;
