@@ -1329,17 +1329,22 @@ macro "save_cropped_rosettes" {
   setBatchMode(false);
 }
 
-macro "align and save.czi" {
+macro "export and save .lif" {
   setBatchMode(true);
   imgs = getDirectory("Select image directory");
   list = getFileList(imgs); 
   for (i=0; i<list.length; i++) {
-    run("Bio-Formats Importer", "open=" + imgs + list[i] + " color_mode=Default view=Hyperstack");
-    run("RGB Color", "frames");
-    run("Linear Stack Alignment with SIFT", "initial_gaussian_blur=1.60 steps_per_scale_octave=3 minimum_image_size=64 maximum_image_size=1024 feature_descriptor_size=4 feature_descriptor_orientation_bins=8 closest/next_closest_ratio=0.92 maximal_alignment_error=25 inlier_ratio=0.05 expected_transformation=Rigid interpolate");
-    selectWindow("Aligned 50 of 50");
-    saveAs("tiff", imgs+File.nameWithoutExtension+"_registered.tiff");
-    close("*");
+    run("Bio-Formats Importer", "open=" + imgs + list[i] + " open_all_series color_mode=Default view=Hyperstack");
+    if (nImages==0)
+     exit("No images are open");
+    dir = imgs + "/out/";
+    for (n=1; n<=nImages; n++) {
+     selectImage(n);
+     title = getTitle;
+     saveAs("tiff", dir+n+"_"+title.replace("/","_"));
+    }
+  close("*");
+  wait(1);
   }
   setBatchMode(false);
 }
@@ -1352,7 +1357,7 @@ macro "merge RGB stacks" {
   for (i=0; i<list.length; i++) {
     open(imgs+list[i]);
     run("RGB Color");
-    saveAs("jpg", out+list[i]+".jpg");
+    saveAs("tiff", out+list[i]);
     close("*");
   }
   setBatchMode(false);
@@ -1385,6 +1390,61 @@ macro "stitch Wiesner" {
     saveAs("Jpeg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17) + ".jpg");
     run("Scale...", "x=0.25 y=0.25 width=5041 height=4958 interpolation=Bilinear average create title=small");
     saveAs("Jpeg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 17) + "_small.jpg");
+    run("Close All");
+  }
+  setBatchMode(false);
+}
+
+macro "stitch Leica DMI 4000B with BG correction" {
+  setBatchMode(true);
+
+  Dialog.create("Stitch tiled images from the Axiovert 200M");
+  Dialog.addDirectory("Select input folder containing subfolders with exported images", "");
+  Dialog.addDirectory("Select output folder", "");
+  Dialog.addFile("Select image containing only background for shading correction", "");
+  Dialog.addChoice("Choose file format for output", newArray("jpg", "png", "tif"), "tif");
+  Dialog.addSlider("Regression threshold for stitching*", 0, 1, 0.75);
+  Dialog.addMessage("*Increase if tiles are matched incorrectly, decrease if stitched images have 'holes'", 10);
+  Dialog.addHelp("<html> This macro uses the 'Grid/Collection Stitching' plugin by Stephan Preibisch, see <a href = 'https://imagej.net'>https://imagej.net</a> for more info.")
+  Dialog.show();
+
+  dir1 = Dialog.getString();
+  dir2 = Dialog.getString();
+  bg = Dialog.getString();
+  type = Dialog.getChoice();
+  threshold = Dialog.getNumber();
+
+  File.makeDirectory(dir2 + "background_corrected/");
+  open(bg);
+  rename("background");
+  w = getWidth();
+  h = getHeight();
+  newImage("white", "RGB white", w, h, 1);
+  imageCalculator("Subtract create", "white","background");
+  run("RGB Color");
+  saveAs(type, dir2 + "shading_correction");
+  run("Close All");
+  subFolderList = getFileList(dir1);
+
+  for(i=0;i<subFolderList.length;i++){
+    folder = dir1 + subFolderList[i];
+    fileList = getFileList(folder);
+    intermediateFolder = dir2 + "background_corrected/" + subFolderList[i];
+    File.makeDirectory(intermediateFolder);
+
+    for(j=0;j<fileList.length;j++){
+      open(folder+fileList[j]);
+      open(dir2 + "shading_correction." + type);
+      imageCalculator("Add", fileList[j], "shading_correction." + type);
+      saveAs(type, intermediateFolder + fileList[j]);
+      run("Close All");
+    }
+
+    run("Grid/Collection stitching", "type=[Unknown position] directory=[" + intermediateFolder + "] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=" + threshold + " max/avg_displacement_threshold=1.50 absolute_displacement_threshold=2.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+    run("RGB Color");
+    saveAs(type, dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 1));
+    run("Scale...", "x=0.25 y=0.25 interpolation=Bilinear average create title=small");
+    saveAs("jpg", dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 1) + "_small");
     run("Close All");
   }
   setBatchMode(false);
@@ -1965,7 +2025,7 @@ macro "stitch seedlings" {
   setBatchMode(false);
 }
 
-macro "Lignin autofluorescence [n0]" {
+macro "Lignin autofluorescence" {
     // set LUT
     run("JDM02 Ink Wash Cyan ");
     // remind user of ROI order
@@ -2005,4 +2065,8 @@ macro "Lignin autofluorescence [n0]" {
     saveAs("Results", b + "Measurements/" + a + ".csv");
     run("Close All");
     setBatchMode(false);
+}
+
+macro "Ink Wash Cyan [n0]" {
+  run("JDM Ink Wash Cyan ");
 }
