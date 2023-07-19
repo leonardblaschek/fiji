@@ -933,8 +933,8 @@ macro "get line profile [n4]" {
   a=getTitle();
   roiManager("Save", dir1+a+"_roi.zip");
   saveAs("tiff", dir1+a);
-  roiManager("Remove Slice Info");  // for measurements on Wiesner diff. heatmaps
-  setSlice(3);  // for measurements on Wiesner diff. heatmaps
+//   roiManager("Remove Slice Info");  // for measurements on Wiesner diff. heatmaps
+//   setSlice(3);  // for measurements on Wiesner diff. heatmaps
   for (m = 0; m < roiManager("count"); m++){
         roiManager("Select", m);
         profile = 0;
@@ -947,7 +947,7 @@ macro "get line profile [n4]" {
   saveAs("Results", dir1+a+".csv");
 }
 
-macro "warped heatmap [n1]" {
+macro "warped heatmap" {
     a=getTitle();
     b=getDirectory("image");
 //     run("Images to Stack", "name=Stack title=[] use");
@@ -1076,70 +1076,11 @@ macro "IF_area" {
 //     run("Close All");
 // }
 
-macro "OD_hue_activity [n5]" {
-  dir = getDirectory("Select directory for saved ROIs");
-  interval = getNumber("Time between images [min]", 10);
-  a = getTitle();
-  if (roiManager("count") != 180) Dialog.create("Unexpected number of ROIs!");
-  else {
-    roiManager("Save", dir+a+".zip");
-    setBatchMode(true);
-    roiManager("Deselect");
-    roiManager("Remove Channel Info");
-    roiManager("Remove Slice Info");
-    roiManager("Remove Frame Info");
-    rename("Aligned_OD");
-    run("Duplicate...", "duplicate");
-    rename("Aligned_hue");
-    selectWindow("Aligned_OD");
-    run("8-bit");
-    run("Calibrate...", "function=[Uncalibrated OD] unit=[Gray Value] text1= text2=");
-    for (n = 1; n <= nSlices; n++) {
-      setSlice(n);
-      for (m = 0; m < 180; m++){
-        roiManager("Select", m);
-        mean = getValue("Mean");
-        setResult("image", m + ((n - 1) * 180), a);
-        setResult("slice", m + ((n - 1) * 180), n);
-        if (m < 20) setResult("cell_type", m + ((n - 1) * 180), "IF");
-        else if (m < 40) setResult("cell_type", m + ((n - 1) * 180), "CML");
-        else if (m < 60) setResult("cell_type", m + ((n - 1) * 180), "CC");
-        else if (m < 80) setResult("cell_type", m + ((n - 1) * 180), "LP");
-        else if (m < 100) setResult("cell_type", m + ((n - 1) * 180), "MX");
-        else if (m < 120) setResult("cell_type", m + ((n - 1) * 180), "PX");
-        else if (m < 140) setResult("cell_type", m + ((n - 1) * 180), "XF");
-        else if (m < 160) setResult("cell_type", m + ((n - 1) * 180), "PH");
-        else setResult("cell_type", m + ((n - 1) * 180), "BG");
-        setResult("mean_absorbance", m + ((n - 1) * 180), mean);
-      }
-    }
-    selectWindow("Aligned_hue");
-    run("HSB Stack");
-    selectWindow("Aligned_hue");
-    run("Reduce Dimensionality...", "slices");
-    selectWindow("Aligned_hue");
-    for (n = 1; n <= nSlices; n++) {
-      setSlice(n);
-      for (m = 0; m < 180; m++){
-        roiManager("Select", m);
-        median = getValue("Median");
-        setResult("median_hue", m + ((n - 1) * 180), median);
-        setResult("interval", m + ((n - 1) * 180), interval);
-      }
-    }
-    close("*");
-    run("Input/Output...", "jpeg=85 gif=-1 file=.csv use_file copy_row save_column");
-    // save measurements
-    saveAs("Results", dir + "Measurements/" + a + ".csv");
-    setBatchMode(false);
-  }
-}
-
-// macro "OD_hue_activity [n5]" { // modified version to re-measure the CC
+// macro "OD_hue_activity [n5]" {
 //   dir = getDirectory("Select directory for saved ROIs");
 //   interval = getNumber("Time between images [min]", 10);
 //   a = getTitle();
-//   if (roiManager("count") != 20) Dialog.create("Unexpected number of ROIs!");
+//   if (roiManager("count") != 180) Dialog.create("Unexpected number of ROIs!");
 //   else {
 //     roiManager("Save", dir+a+".zip");
 //     setBatchMode(true);
@@ -1155,13 +1096,21 @@ macro "OD_hue_activity [n5]" {
 //     run("Calibrate...", "function=[Uncalibrated OD] unit=[Gray Value] text1= text2=");
 //     for (n = 1; n <= nSlices; n++) {
 //       setSlice(n);
-//       for (m = 0; m < 20; m++){
+//       for (m = 0; m < 180; m++){
 //         roiManager("Select", m);
 //         mean = getValue("Mean");
-//         setResult("image", m + ((n - 1) * 20), a);
-//         setResult("slice", m + ((n - 1) * 20), n);
-//         setResult("cell_type", m + ((n - 1) * 20), "CC");
-//         setResult("mean_absorbance", m + ((n - 1) * 20), mean);
+//         setResult("image", m + ((n - 1) * 180), a);
+//         setResult("slice", m + ((n - 1) * 180), n);
+//         if (m < 20) setResult("cell_type", m + ((n - 1) * 180), "IF");
+//         else if (m < 40) setResult("cell_type", m + ((n - 1) * 180), "CML");
+//         else if (m < 60) setResult("cell_type", m + ((n - 1) * 180), "CC");
+//         else if (m < 80) setResult("cell_type", m + ((n - 1) * 180), "LP");
+//         else if (m < 100) setResult("cell_type", m + ((n - 1) * 180), "MX");
+//         else if (m < 120) setResult("cell_type", m + ((n - 1) * 180), "PX");
+//         else if (m < 140) setResult("cell_type", m + ((n - 1) * 180), "XF");
+//         else if (m < 160) setResult("cell_type", m + ((n - 1) * 180), "PH");
+//         else setResult("cell_type", m + ((n - 1) * 180), "BG");
+//         setResult("mean_absorbance", m + ((n - 1) * 180), mean);
 //       }
 //     }
 //     selectWindow("Aligned_hue");
@@ -1171,11 +1120,11 @@ macro "OD_hue_activity [n5]" {
 //     selectWindow("Aligned_hue");
 //     for (n = 1; n <= nSlices; n++) {
 //       setSlice(n);
-//       for (m = 0; m < 20; m++){
+//       for (m = 0; m < 180; m++){
 //         roiManager("Select", m);
 //         median = getValue("Median");
-//         setResult("median_hue", m + ((n - 1) * 20), median);
-//         setResult("interval", m + ((n - 1) * 20), interval);
+//         setResult("median_hue", m + ((n - 1) * 180), median);
+//         setResult("interval", m + ((n - 1) * 180), interval);
 //       }
 //     }
 //     close("*");
@@ -1185,6 +1134,109 @@ macro "OD_hue_activity [n5]" {
 //     setBatchMode(false);
 //   }
 // }
+
+// macro "OD_hue_activity [n5]" { // modified version to re-measure the CC and CML
+//   dir = getDirectory("Select directory for saved ROIs");
+//   interval = getNumber("Time between images [min]", 10);
+//   a = getTitle();
+//   if (roiManager("count") != 40) Dialog.create("Unexpected number of ROIs!");
+//   else {
+//     roiManager("Save", dir+a+".zip");
+//     setBatchMode(true);
+//     roiManager("Deselect");
+//     roiManager("Remove Channel Info");
+//     roiManager("Remove Slice Info");
+//     roiManager("Remove Frame Info");
+//     rename("Aligned_OD");
+//     run("Duplicate...", "duplicate");
+//     rename("Aligned_hue");
+//     selectWindow("Aligned_OD");
+//     run("8-bit");
+//     run("Calibrate...", "function=[Uncalibrated OD] unit=[Gray Value] text1= text2=");
+//     for (n = 1; n <= nSlices; n++) {
+//       setSlice(n);
+//       for (m = 0; m < 40; m++){
+//         roiManager("Select", m);
+//         mean = getValue("Mean");
+//         setResult("image", m + ((n - 1) * 40), a);
+//         setResult("slice", m + ((n - 1) * 40), n);
+//         if (m < 20) setResult("cell_type", m + ((n - 1) * 40), "IF-CML");
+//         else if (m < 40) setResult("cell_type", m + ((n - 1) * 40), "IF-CC");
+//         setResult("mean_absorbance", m + ((n - 1) * 40), mean);
+//       }
+//     }
+//     selectWindow("Aligned_hue");
+//     run("HSB Stack");
+//     selectWindow("Aligned_hue");
+//     run("Reduce Dimensionality...", "slices");
+//     selectWindow("Aligned_hue");
+//     for (n = 1; n <= nSlices; n++) {
+//       setSlice(n);
+//       for (m = 0; m < 40; m++){
+//         roiManager("Select", m);
+//         median = getValue("Median");
+//         setResult("median_hue", m + ((n - 1) * 40), median);
+//         setResult("interval", m + ((n - 1) * 40), interval);
+//       }
+//     }
+//     close("*");
+//     run("Input/Output...", "jpeg=85 gif=-1 file=.csv use_file copy_row save_column");
+//     // save measurements
+//     saveAs("Results", dir + "Measurements/" + a + ".csv");
+//     setBatchMode(false);
+//   }
+// }
+
+macro "OD_hue_activity [n5]" { // modified version to re-measure the CC
+  dir = getDirectory("Select directory for saved ROIs");
+  interval = getNumber("Time between images [min]", 10);
+  a = getTitle();
+  if (roiManager("count") != 20) Dialog.create("Unexpected number of ROIs!");
+  else {
+    roiManager("Save", dir+a+".zip");
+    setBatchMode(true);
+    roiManager("Deselect");
+    roiManager("Remove Channel Info");
+    roiManager("Remove Slice Info");
+    roiManager("Remove Frame Info");
+    rename("Aligned_OD");
+    run("Duplicate...", "duplicate");
+    rename("Aligned_hue");
+    selectWindow("Aligned_OD");
+    run("8-bit");
+    run("Calibrate...", "function=[Uncalibrated OD] unit=[Gray Value] text1= text2=");
+    for (n = 1; n <= nSlices; n++) {
+      setSlice(n);
+      for (m = 0; m < 20; m++){
+        roiManager("Select", m);
+        mean = getValue("Mean");
+        setResult("image", m + ((n - 1) * 20), a);
+        setResult("slice", m + ((n - 1) * 20), n);
+        setResult("cell_type", m + ((n - 1) * 20), "CC");
+        setResult("mean_absorbance", m + ((n - 1) * 20), mean);
+      }
+    }
+    selectWindow("Aligned_hue");
+    run("HSB Stack");
+    selectWindow("Aligned_hue");
+    run("Reduce Dimensionality...", "slices");
+    selectWindow("Aligned_hue");
+    for (n = 1; n <= nSlices; n++) {
+      setSlice(n);
+      for (m = 0; m < 20; m++){
+        roiManager("Select", m);
+        median = getValue("Median");
+        setResult("median_hue", m + ((n - 1) * 20), median);
+        setResult("interval", m + ((n - 1) * 20), interval);
+      }
+    }
+    close("*");
+    run("Input/Output...", "jpeg=85 gif=-1 file=.csv use_file copy_row save_column");
+    // save measurements
+    saveAs("Results", dir + "Measurements/" + a + ".csv");
+    setBatchMode(false);
+  }
+}
 
 macro "add_raman_crosshairs" {
 //visualise the center of the individual images in the stitched mosaic
@@ -2067,6 +2119,26 @@ macro "Lignin autofluorescence" {
     setBatchMode(false);
 }
 
-macro "Ink Wash Cyan [n0]" {
-  run("JDM Ink Wash Cyan ");
+macro "stem angles [n1]" {
+    roiManager("Select", 0);
+    baseAngle = getValue("Angle");
+    roiManager("Select", 1);
+    topAngle = getValue("Angle");
+    setResult("base_angle", 0, baseAngle);
+    setResult("top_angle", 0, topAngle);
+}
+
+macro "skeletonize & measure [n0]" {
+  setBatchMode(true);
+  Table.create("Longest shortest paths");
+  for (i = 0; i < roiManager("count"); i++) {
+    roiManager("Select", i);
+    run("Create Mask");
+    run("Skeletonize");
+    run("Analyze Skeleton (2D/3D)", "prune=none calculate");
+    px = getResult("Longest Shortest Path", nResults - 1);
+    nrow = Table.size("Longest shortest paths");
+    Table.set("ROI", nrow, i + 1, "Longest shortest paths");
+    Table.set("px", nrow, px, "Longest shortest paths");
+  }
 }
