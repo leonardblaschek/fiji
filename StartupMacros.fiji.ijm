@@ -1450,7 +1450,7 @@ macro "stitch Wiesner" {
 macro "stitch Leica DMI 4000B with BG correction" {
   setBatchMode(true);
 
-  Dialog.create("Stitch tiled images from the Axiovert 200M");
+  Dialog.create("Stitch tiled images from the Leica DMI 4000B");
   Dialog.addDirectory("Select input folder containing subfolders with exported images", "");
   Dialog.addDirectory("Select output folder", "");
   Dialog.addFile("Select image containing only background for shading correction", "");
@@ -1492,7 +1492,7 @@ macro "stitch Leica DMI 4000B with BG correction" {
       run("Close All");
     }
 
-    run("Grid/Collection stitching", "type=[Unknown position] directory=[" + intermediateFolder + "] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=" + threshold + " max/avg_displacement_threshold=1.50 absolute_displacement_threshold=2.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
+    run("Grid/Collection stitching", "type=[Unknown position] directory=[" + intermediateFolder + "] output_textfile_name=TileConfiguration.txt fusion_method=[Linear Blending] regression_threshold=" + threshold + " max/avg_displacement_threshold=1.50 absolute_displacement_threshold=4.50 compute_overlap ignore_z_stage subpixel_accuracy computation_parameters=[Save computation time (but use more RAM)] image_output=[Fuse and display]");
     run("RGB Color");
     saveAs(type, dir2 + substring(subFolderList[i], 0, lengthOf(subFolderList[i]) - 1));
     run("Scale...", "x=0.25 y=0.25 interpolation=Bilinear average create title=small");
